@@ -1,72 +1,121 @@
+
 from os import walk, path
 import regex as re
 from nltk.tokenize import sent_tokenize
 from typing import List
 from transformers import pipeline
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
+import nltk
 from tqdm import tqdm
+import pickle
+import json
+#nltk.download('punkt')
 
-def whitespaceless_compare(s1, s2):
-    return re.sub(r'[\s\n]*','', s1) == re.sub(r'[\s\n]*','', s2)
 
-
-class Corpus:
-    def __init__(self, directory, extensions):
-        self.documents = []
-        for root, dirs, files in walk(directory):
-            self.documents += [Document(path.join(root, file)) 
-                                    for file in files 
-                                        if (file.split('.')[-1] in extensions)]
-
-    
 class Document:
     def __init__(self, path: str):
         with open(path, "r") as file:
-            content = file.read()
-            
+            file_content = file.read()
+
         self.path = path
-        self.text = content
+        self.title = path # temporary, will fix in a bit
+        self.text = file_content.lower()
         self.sentences = sent_tokenize(self.text)
-                        
-                
-    '''Filters all senetences by a particular ref'''
-    def get_citation_sentences(self, ref: str) -> List[str]:
-        return [] if ref is None else [sentence for sentence in self.sentences 
-                                       if ref in sentence and sentence[0] != '*']
-    
-    
+
+
+    ''' Filters all sentences by a particular ref '''
+    def citations_from_ref(self, ref: str) -> List[str]:
+        return [] if ref is None else [sentence for sentence in self.sentences if (ref in sentence) and (sentence[0] != '*')]
+
+
     ''' Retrieves appropriate citation based on paper title'''
-    def get_citation_ref_from_title(self, title: str):
+    def ref_from_title(self, title: str) -> str:
+        title = title.lower()
+        
         numerical_refs = re.findall(f"\* (\[\d+\]).*{title}", self.text)
         string_refs = re.findall(f"\* ([^\\n\)]+[\)]).*{title}", self.text)
-        
+
         if not (len(numerical_refs) <= 1 and len(string_refs) <= 1):
             print(f"{self.path} seems to contain the following title twice: {title}")
-        
+
         ref_number = None if not numerical_refs else numerical_refs[0]
         ref_str = None if not string_refs else re.sub(r'\s*[\(\[]?(\d+)[\)\]]?', r', \1', string_refs[0])
-                
+
         return ref_number or ref_str
-    
-    
+
+
+    ''' Retrieves all citation sentences in a document based on the title. '''
+    def citations_from_title(self, title: str) -> List[str]:
+        ref = self.ref_from_title(title = title)
+        return self.citations_from_ref(ref)
+
+
 class CitationClassifier:
     def __init__(self, model_checkpoint):
-        tokenizer = AutoTokenizer.from_pretrained(model_checkpoint)
+        tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)
         self.classifier = pipeline('text-classification', model=model, tokenizer=tokenizer)
+
+    def classify_sentence(self, sentence) -> List[dict]:
+        label = self.classifier(sentence, truncation = True)[-1]
+        label['sentence'] = sentence
+        return label
+
+    def classify_document_citations(self, document: Document, title: str) -> List[dict ]:
+        sentences = document.citations_from_title(title)
+        labels = []
+        for label in map(self.classify_sentence, sentences):
+            label['foundation_model'] = title
+            label['paper'] = path.basename(document.title) # will update this not to use the basename, but the title, when i get there!
+            labels.append(label)
+        return labels
     
-    def classify(self, sentence):
-        return self.classifier(sentence)
+class Corpus:
+    def __init__(self, directory, extensions, limit = 10):
+        self.limit = limit
+        self.directory = directory
+        self.extensions = extensions
+        self.documents = self.find_documents()
+
+    def find_documents(self):
+        documents = []
+        for root, dirs, files in walk(self.directory):
+            documents += [Document(path.join(root, file))
+                                    for file in files
+                                        if (file.split('.')[-1] in self.extensions)]
+        return documents[:self.limit]
+
+    def classify_documents(self, classifier: CitationClassifier, title: str):
+        return [classifier.classify_document_citations(document, title) for document in self.documents]
 
 
-if __name__ == '__main__':    
-    corpus = Corpus('./Markdown/', ['mmd'])
-    results = {}
-    for document in tqdm(corpus.documents):
-        ref = document.get_citation_ref_from_title(title="Llama: Open and efficient foundation language models")
-        results[document.path] = document.get_citation_sentences(ref)
 
+
+markdown_path = './Markdown'
+corpus = Corpus(markdown_path, extensions = ['mmd'])
+classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
+
+with open('121_results_v2.json', 'r') as f:
+    foundation_models_json = json.load(f)
+
+titles = [re.escape(paper['title']) for _, paper in foundation_models_json.items()] # one of the paper titles has a backslash in it. not a permanent solution!
+
+results = {}
+for title in tqdm(titles):
+    print(title)
+    results[title] = corpus.classify_documents(classifier, title)
+
+
+with open('full_results.pkl', 'wb') as f:
+    pickle.dump(results, f)
     
-    print(len(results))
-    
-         
+with open('full_results.pkl', 'rb') as f:
+    results = pickle.load(f)
+
+
+# took about 1 minutes, 25 seconds for every foundation model, 10 of the documents.
+# definitely need some parallelization :)
+
+
+
+
