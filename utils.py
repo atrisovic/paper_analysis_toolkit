@@ -107,13 +107,25 @@ titles = [re.escape(paper['title']) for _, paper in foundation_models_json.items
 results: List[dict] = []
 for title in tqdm(titles):
     results += corpus.classify_citations_from_title(classifier, title)
-
-df = pd.DataFrame.from_dict(results).groupby(['foundation_model', 'label']).size()
-
+    
 
 # this is just for demo purposes, not used in the script
 with open('results.pkl', 'wb') as f:
-    pickle.dump(df, f)
+    pickle.dump(results, f)
     
 with open('results.pkl', 'rb') as f:
+    results = pickle.load(f) 
+    
+    
+    
+    
+
+df = pd.DataFrame.from_dict(results).groupby(['foundation_model', 'label'])['paper'].nunique()
+
+
+# this is just for demo purposes, not used in the script
+with open('df.pkl', 'wb') as f:
+    pickle.dump(df, f)
+    
+with open('df.pkl', 'rb') as f:
     results = pickle.load(f) 
