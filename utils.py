@@ -9,6 +9,7 @@ import nltk
 from tqdm import tqdm
 import pickle
 import json
+import pandas as pd
 #nltk.download('punkt')
 
 
@@ -61,7 +62,7 @@ class CitationClassifier:
         label['sentence'] = sentence
         return label
 
-    def classify_document_citations(self, document: Document, title: str) -> List[dict ]:
+    def classify_document_citations(self, document: Document, title: str) -> List[dict]:
         sentences = document.citations_from_title(title)
         labels = []
         for label in map(self.classify_sentence, sentences):
@@ -85,8 +86,11 @@ class Corpus:
                                         if (file.split('.')[-1] in self.extensions)]
         return documents[:self.limit]
 
-    def classify_documents(self, classifier: CitationClassifier, title: str):
-        return [classifier.classify_document_citations(document, title) for document in self.documents]
+    def classify_citations_from_title(self, classifier: CitationClassifier, title: str) -> List[dict]:
+        results = []
+        for document in self.documents:
+            results += classifier.classify_document_citations(document, title)
+        return results
 
 
 
@@ -100,22 +104,16 @@ with open('121_results_v2.json', 'r') as f:
 
 titles = [re.escape(paper['title']) for _, paper in foundation_models_json.items()] # one of the paper titles has a backslash in it. not a permanent solution!
 
-results = {}
+results: List[dict] = []
 for title in tqdm(titles):
-    print(title)
-    results[title] = corpus.classify_documents(classifier, title)
+    results += corpus.classify_citations_from_title(classifier, title)
+
+df = pd.DataFrame.from_dict(results).groupby(['foundation_model', 'label']).size()
 
 
-with open('full_results.pkl', 'wb') as f:
-    pickle.dump(results, f)
+# this is just for demo purposes, not used in the script
+with open('results.pkl', 'wb') as f:
+    pickle.dump(df, f)
     
-with open('full_results.pkl', 'rb') as f:
-    results = pickle.load(f)
-
-
-# took about 1 minutes, 25 seconds for every foundation model, 10 of the documents.
-# definitely need some parallelization :)
-
-
-
-
+with open('results.pkl', 'rb') as f:
+    results = pickle.load(f) 
