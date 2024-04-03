@@ -26,12 +26,7 @@ class CitationClassifier:
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)
         
-        if mps.is_available():
-            device = 'mps'
-        elif cuda.is_available():
-            device = 'cuda'
-        else:
-            device = 'cpu'
+        device = 'mps' if mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
         
         self.classifier = pipeline('text-classification', model=model, tokenizer=tokenizer, device = device)
 
@@ -46,14 +41,11 @@ class TextualReference:
         self.classification: str = None
         self.score: float = None
         
-    def __str__(self):
-        return f"Sentence: {self.sentence[:50]}...; Classification: {self.classification}; Score: {self.score}"
-        
     def classify(self, classifier: CitationClassifier):
         self.classification, self.score = classifier.classify_text(self.sentence)
     
     def as_dictionary(self):
-        order_class_values = ['extends', 'differences', 'similarities','uses', 'background', 'motivation', 'future_work']
+        order_class_values = ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background']
         classification_rankings = {val: idx for idx, val in enumerate(order_class_values)}
         return {
                 'sentence': self.sentence,
