@@ -62,6 +62,7 @@ class Corpus:
             paper.getReferenceFromTitle(title, key, classifier = classifier)
             
     def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: CitationClassifier = None, logfile = None):
+        print(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
         for title, key in tqdm(list(zip(titles, keys))):
             self.findAllPaperReferencesByTitle(title = title, key = key, classifier=classifier)
             if logfile:
