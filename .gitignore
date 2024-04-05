@@ -1,3 +1,6 @@
 Markdown/*
 .DS_Store
 *.pkl
+*.pyc
+*.ipynb
+*.pdf
