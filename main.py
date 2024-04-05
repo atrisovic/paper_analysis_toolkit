@@ -1,28 +1,25 @@
 from CitationClassifier import CitationClassifier
-from Corpus import Corpus
 from ClassificationCounter import ClassificationCounter
-import json, pickle, regex as re
-
+from Corpus import Corpus
+import json, pickle
+import warnings
+from datetime import datetime
+warnings.filterwarnings("ignore") #just for clarity, temporarily
 
 if __name__ == '__main__':
-    classifier = None #CitationClassifier('allenai/multicite-multilabel-scibert')
-    corpus = Corpus('./Markdown', extensions = ['mmd'], limit = 1000)
-    
-    with open('foundation_models.json', 'r') as f:
+
+    markdown_file_path = './Markdown/'
+    foundation_models_path = 'foundation_models.json'
+    logfile = f'logs/logfile_{datetime.now()}.txt'
+
+    classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
+    corpus = Corpus(markdown_file_path, extensions = ['mmd'], limit = None)
+
+    with open(foundation_models_path, 'r') as f:
         foundational_models_json = json.load(f)
-            # one of the paper titles has a backslash in it. not a permanent solution!
-        keys, titles = zip(*[(key, re.escape(data['title'])) for key, data in foundational_models_json.items()])
+        keys, titles = list(zip(*[(key, data['title'].replace('\\infty', '∞')) for key, data in foundational_models_json.items()]))
 
-    corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier)
-    df = ClassificationCounter(classifier = classifier).getClassificationCounts(corpus = corpus)
-        
-    
+    corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier, logfile = logfile)
 
-    with open('pickle/df.pkl', 'wb') as f:
-        pickle.dump(df, f)
-        
     with open('pickle/corpus.pkl', 'wb') as f:
         pickle.dump(corpus, f)
-        
-    with open('pickle/foundationalModelUseCaseCounts.pkl', 'wb') as f:
-        pickle.dump(df, f)

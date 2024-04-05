@@ -36,7 +36,7 @@ class Paper:
     def getAllReferences(self):
         return [item for _, item in self.references.items()]
     
-    def getAllTextualReferences(self, as_dict = False):
+    def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
         if (as_dict):
             return [text_ref | {'paper': self.title} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
         else:
