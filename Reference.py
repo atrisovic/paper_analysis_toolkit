@@ -17,12 +17,13 @@ class Reference:
         self.missing_citation: bool = None
         self.duplicative_citation: bool = None
         self.reference_exists: bool = None
+        self.missing_page_fail: bool = None
         
     def __repr__(self):
         return f"Title: {self.title}, Citation: '{self.citations}', missing_citation: {self.missing_citation}"
         
-    def getCitationFromContent(self, content: str) -> str:
-        numerical_refs = re.findall(r"\* (\[\d+\]).*" + self.title, content) #  * [38] SOME TEXT HERE title
+    def getCitationFromContent(self, content: str) -> str:    
+        numerical_refs = re.findall(r"\* ([\(\[]\d{1,3}[\)\]]).*" + self.title, content) #  * [38] SOME TEXT HERE title
         string_refs = re.findall(r"\*[\s]+([^\n\)\]]{1,35}[\)\]]+).*" + self.title, content) #  * Name, Extra, (Year) SOME TEXT HERE title
         
         #assert(implies(self.title in content, numerical_refs or string_refs)), f"Found '{self.title}' in {self.paper_path}, but can't link citation."
@@ -43,6 +44,10 @@ class Reference:
         
         return self.citations
     
+    def checkMissingPageFailure(self, content: str):
+        self.missing_page_fail: bool = content.find('missing_page_fail') >= 0
+    
+    
     def checkCitationInSentence(self, sentence: str) -> List[str]:
         for citation in self.citations:
             if citation in sentence:
@@ -54,7 +59,7 @@ class Reference:
         if self.citations is None:
             self.textualReferences = []
         else:
-            self.textualReferences = [TextualReference(sentence) for sentence in all_sentences if (self.checkCitationInSentence(sentence)) and (sentence[0] != '*')]
+            self.textualReferences = [TextualReference(sentence) for sentence in all_sentences if (self.checkCitationInSentence(sentence))]
             
         return self.textualReferences
 

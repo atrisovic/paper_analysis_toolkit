@@ -4,7 +4,8 @@ from math import ceil
 from tqdm import tqdm
 from CitationClassifier import CitationClassifier
 from Reference import Reference
-from os import walk, path
+from os import walk
+from os.path import join
 import pandas as pd
 import logging
 
@@ -15,13 +16,16 @@ class Corpus:
         self.extensions = extensions
         self.cluster = cluster
         self.cluster_count = cluster_count
-        self.papers: List[Paper] = self.discoverPapers()
+        
+        good_papers, bad_papers = self.discoverPapers()
+        self.bad_papers: List[Tuple[str, Exception]] = bad_papers
+        self.papers: List[Paper] = good_papers
 
     def discoverPapers(self) -> List[Paper]:
         print(f"Reading all file in directory {self.directory}")
         all_file_paths = []
         for root, dirs, files in walk(self.directory):
-            all_file_paths += [path.join(root, file)
+            all_file_paths += [join(root, file)
                                     for file in files
                                         if (file.split('.')[-1] in self.extensions)]
         if (self.limit or self.cluster):
@@ -34,8 +38,17 @@ class Corpus:
             chunk_length = ceil(len(all_file_paths)/self.cluster_count)
             all_file_paths = all_file_paths[chunk_length * self.cluster: chunk_length * (self.cluster + 1)]
             
-        self.papers = [Paper(path) for path in tqdm(all_file_paths)]
-        return self.papers
+        good_papers, bad_papers = [], []
+        for path in tqdm(all_file_paths):
+            try:
+                good_papers.append(Paper(path)) #technically the append could fail, keep this in mind
+            except Exception as e:
+                bad_papers.append((path, e))
+        
+        failure_rate = len(bad_papers)/(len(bad_papers) + len(good_papers))
+        print(f"{round(failure_rate * 100, 2)}% of papers threw an error. See Corpus.bad_papers.")
+                        
+        return good_papers, bad_papers
     
         
     def saveClassificationByTitle(self, title: str, key: str, logfile: str):
@@ -65,7 +78,7 @@ class Corpus:
         print(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
         for title, key in tqdm(list(zip(titles, keys))):
             self.findAllPaperReferencesByTitle(title = title, key = key, classifier=classifier)
-            if logfile:
+            if logfile and classifier:
                 self.saveClassificationByTitle(title, key, logfile)
             
             
