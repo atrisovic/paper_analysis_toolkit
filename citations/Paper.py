@@ -1,4 +1,4 @@
-from Reference import Reference
+from .Reference import Reference
 import regex as re
 from typing import List, Dict
 from nltk.tokenize import sent_tokenize

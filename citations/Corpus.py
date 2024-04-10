@@ -1,9 +1,9 @@
 from typing import List, Tuple
-from Paper import Paper
+from .Paper import Paper
 from math import ceil
 from tqdm import tqdm
-from CitationClassifier import CitationClassifier
-from Reference import Reference
+from .CitationClassifier import CitationClassifier
+from .Reference import Reference
 from os import walk
 from os.path import join
 import pandas as pd

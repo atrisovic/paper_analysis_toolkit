@@ -1,7 +1,6 @@
-Markdown/*
+*.mmd
 .DS_Store
 *.pkl
 *.pyc
-*.ipynb
 *.pdf
 *.log

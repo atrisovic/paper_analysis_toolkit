@@ -1,5 +1,5 @@
-from CitationClassifier import CitationClassifier
-from Corpus import Corpus
+from .CitationClassifier import CitationClassifier
+from .Corpus import Corpus
 import pandas as pd
 
 class ClassificationCounter:

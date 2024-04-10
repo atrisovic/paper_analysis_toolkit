@@ -1,6 +1,5 @@
-from CitationClassifier import CitationClassifier
-from ClassificationCounter import ClassificationCounter
-from Corpus import Corpus
+from citations.CitationClassifier import CitationClassifier
+from citations.Corpus import Corpus
 import json, pickle
 import warnings, logging
 from datetime import datetime
@@ -13,8 +12,8 @@ def main():
     resultsfile = f"results/{right_now}.log"
     logging.basicConfig(filename=logfile, level=logging.INFO)
 
-    markdown_file_path = './Markdown/'
-    foundation_models_path = 'foundation_models.json'
+    markdown_file_path = './data/Markdown/'
+    foundation_models_path = './data/foundation_models.json'
     classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
     corpus = Corpus(markdown_file_path, extensions = ['mmd'], limit = None)
 

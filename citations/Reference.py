@@ -1,7 +1,7 @@
-from TextualReference import TextualReference
-from CitationClassifier import CitationClassifier
+from .TextualReference import TextualReference
+from .CitationClassifier import CitationClassifier
 from typing import List
-from utils import implies
+from .utils import implies
 import regex as re
 
 
