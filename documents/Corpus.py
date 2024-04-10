@@ -5,7 +5,7 @@ from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from os import walk
-from os.path import join
+from os.path import join, basename
 import pandas as pd
 import logging
 from utils.functional import clusterOrLimitList
@@ -13,11 +13,12 @@ from utils.functional import clusterOrLimitList
 logger = logging.getLogger(__name__)
 
 class Corpus:
-    def __init__(self, directory, extensions: List[str], limit: int = None, cluster_info: Tuple[int, int] = None):
+    def __init__(self, directory, extensions: List[str], limit: int = None, cluster_info: Tuple[int, int] = None, filter_path: str = None):
         self.limit = limit
         self.cluster_info = cluster_info
         self.directory = directory
         self.extensions = extensions
+        self.filter_path = filter_path
         
         good_papers, bad_papers = self.discoverPapers()
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
@@ -30,8 +31,13 @@ class Corpus:
             all_file_paths += [join(root, file)
                                     for file in files
                                         if (file.split('.')[-1] in self.extensions)]
+            
+        if (self.filter_path):
+            with open(self.filter_path, 'r') as f:
+                filtered_content = f.read().lower()
+            all_file_paths = list(filter(lambda s: basename(s).split('.')[0] in filtered_content, all_file_paths))
         
-        logger.info(f"Found {len(all_file_paths)} files. Filtering based on limit ({self.limit}) and thread workload ({self.cluster_info[0]} of {self.cluster_info[1]}).")
+        logger.info(f"Found {len(all_file_paths)} files (filter_path set to {self.filter_path}). Now filtering based on limit ({self.limit}) and thread workload ({self.cluster_info[0]} of {self.cluster_info[1]}).")
         
         all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.limit)
             

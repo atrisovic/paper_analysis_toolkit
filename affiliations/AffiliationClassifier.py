@@ -93,15 +93,13 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
     
     
     def classifyFromTextEnsureJSON(self, text: str) -> dict:
-        found_json = False
         counter = 0
         json_result = None
-        while (counter < 5 and not found_json):
+        while (counter < 5 and not json_result):
             counter += 1
             json_string_results = self.classifyFromText(text)
             try:
                 json_result = json.loads(json_string_results)
-                found_json = True
             except:
                 pass
         return json_result
