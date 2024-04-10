@@ -22,6 +22,9 @@ def main():
 
     markdown_file_path = './data/Markdown/'
     foundation_models_path = './data/foundation_models.json'
+    
+    
+    
     classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
     corpus = Corpus(markdown_file_path, extensions = ['mmd'], cluster_info = (args.index, args.workers), limit = args.limit)
 
@@ -31,7 +34,7 @@ def main():
 
     corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier, resultsfile = resultsfile)
 
-    with open('pickle/corpus.pkl', 'wb') as f:
+    with open(f'pickle/corpus{args.index if args.workers > 1 else ''}.pkl', 'wb') as f:
         pickle.dump(corpus, f)
         
         
