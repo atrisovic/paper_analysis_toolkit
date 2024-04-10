@@ -1,5 +1,5 @@
 from citations.CitationClassifier import CitationClassifier
-from citations.Corpus import Corpus
+from documents.Corpus import Corpus
 import json, pickle
 import warnings, logging
 from datetime import datetime

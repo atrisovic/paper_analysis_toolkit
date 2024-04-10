@@ -8,6 +8,7 @@ class CitationClassifier:
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)
         
         device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
+
         
         self.classifier = pipeline('text-classification', model=model, tokenizer=tokenizer, device = device)
 

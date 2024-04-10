@@ -1,13 +1,14 @@
 from typing import List, Tuple
 from .Paper import Paper
 from tqdm import tqdm
-from .CitationClassifier import CitationClassifier
-from .Reference import Reference
+from citations.CitationClassifier import CitationClassifier
+from citations.Reference import Reference
+from affiliations.AffiliationClassifier import AffiliationClassifier
 from os import walk
 from os.path import join
 import pandas as pd
 import logging
-from .utils import clusterOrLimitList
+from utils.functional import clusterOrLimitList
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class Corpus:
     
         
     def saveClassificationByTitle(self, title: str, key: str, resultsfile: str):
-        logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}...).")
+        logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}.).")
         textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('FM_key') == key]
         df = pd.DataFrame.from_dict(textRefByKey)
         
@@ -72,7 +73,7 @@ class Corpus:
             logger.info(f"No textual references found for {key}. Nothing written to results file.")
 
     def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: CitationClassifier):
-        logger.info(f"Finding references for (key = {key}, title = {title[:30]}...). Classification is turned {'on' if classifier else 'off'}.")
+        logger.info(f"Finding references for (key = {key}, title = {title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
         for paper in self.papers:
             paper.getReferenceFromTitle(title, key, classifier = classifier)
         logger.info(f"References successfully saved to underlying paper objects.")
@@ -90,3 +91,7 @@ class Corpus:
         
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
+    
+    def setAllAffliations(self, classifier: AffiliationClassifier):
+        for paper in tqdm(self.papers):
+            paper.findNamesAndAffiliations(classifier=classifier)

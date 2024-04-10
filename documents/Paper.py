@@ -1,8 +1,10 @@
-from .Reference import Reference
+from citations.Reference import Reference
 import regex as re
 from typing import List, Dict
 from nltk.tokenize import sent_tokenize
 import logging
+from affiliations.AffiliationClassifier import AffiliationClassifier
+
 
 logger = logging.getLogger(__name__)
 
@@ -19,6 +21,8 @@ class Paper:
                 
         self.references: Dict[str, Reference] = {}
         
+        self.name_and_affiliation: dict = None
+        
     def adjustFileContent(self):
         with open(self.path, "r") as f:
             file_content = ( f.read()
@@ -32,6 +36,10 @@ class Paper:
     def getPaperTitle(self):
         first_line = self.nonref_section.split('\n')[0]
         return re.sub(r'#','', first_line)
+
+    def getPreAbstract(self):
+        match = re.search('#+\s?Abstract', self.content)
+        return None if match is None else self.content[:match.start()]
     
     def normalizeNumericalCitations(self, content: str) -> str:
         # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
@@ -82,3 +90,9 @@ class Paper:
             return [text_ref | {'paper': self.title} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
         else:
             return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
+        
+    
+    def findNamesAndAffiliations(self, classifier: AffiliationClassifier)->dict:
+        pre_abstract = self.getPreAbstract()
+        self.name_and_affiliation = classifier.classifyFromText(pre_abstract)
+        return self.name_and_affiliation
