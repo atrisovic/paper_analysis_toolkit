@@ -34,7 +34,7 @@ def main():
 
     corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier, resultsfile = resultsfile)
 
-    with open(f'pickle/corpus{args.index if args.workers > 1 else ''}.pkl', 'wb') as f:
+    with open(f'pickle/corpus{args.index if args.workers > 1 else ""}.pkl', 'wb') as f:
         pickle.dump(corpus, f)
         
         
