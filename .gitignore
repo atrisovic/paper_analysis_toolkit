@@ -4,3 +4,4 @@ Markdown/*
 *.pyc
 *.ipynb
 *.pdf
+*.log

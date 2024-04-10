@@ -2,55 +2,60 @@ from Reference import Reference
 import regex as re
 from typing import List, Dict
 from nltk.tokenize import sent_tokenize
+import logging
 
-
+logger = logging.getLogger(__name__)
 
 class Paper:
     def __init__(self, path: str):
         self.path: str = path
-        self.content: str = self.retrieveAllContent()
+        self.content: str = self.adjustFileContent()
         
-        nonref_section, ref_section = self.retrieveAndFormatContent()
-        self.nonref_section = nonref_section
-        self.ref_section = ref_section
+        self.nonref_section, self.ref_section = self.splitByReferenceSection()
         
-        
-        first_line = self.nonref_section.split('\n')[0]
-        self.title: str = re.sub(r'#','', first_line)
+        self.title: str = self.getPaperTitle()
         
         self.all_sentences: List[str] = sent_tokenize(self.nonref_section)
                 
         self.references: Dict[str, Reference] = {}
+        
+    def adjustFileContent(self):
+        with open(self.path, "r") as f:
+            file_content = ( f.read()
+                                .lower()
+                                .replace('et al.', 'et al')   #sentence tokenizer mistakes the period for end of sentence
+                                )
+        normalized = self.normalizeNumericalCitations(file_content)
+        
+        return normalized
     
-    def fix_numerical_sequence_citations(self, content: str):
+    def getPaperTitle(self):
+        first_line = self.nonref_section.split('\n')[0]
+        return re.sub(r'#','', first_line)
+    
+    def normalizeNumericalCitations(self, content: str) -> str:
+        # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
         numerical_sequence_citations = [match[0] for match in re.findall('\[((\d+\s*[,;]\s*)+\d+)\]', content)]
+        
         for sequence in numerical_sequence_citations:
             corrected_citations = ','.join(f'[{num}]' for num in map(int, re.split('[,;]\s*', sequence)))
             content = re.sub('\[' + sequence + '\]', corrected_citations, content)
             
+            
+        # [1-5] =====> [1],[2],[3],[4],[5]
         numerical_range_citations = re.findall('\[(\d+-\d+)\]', content)
         for citation in numerical_range_citations:
-            n1, n2 = re.findall('(\d+)-(\d+)', citation)[0]
-            corrected_citations = ','.join(f'[{num}]' for num in range(int(n1), int(n2)+1))
+            n1, n2 = map(int, re.findall('(\d+)-(\d+)', citation)[0])
+            corrected_citations = ','.join(f'[{num}]' for num in range(n1, n2+1))
             content = re.sub('\[' + citation + '\]', corrected_citations, content)
         
         return content
+                    
+    def splitByReferenceSection(self):
+        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', self.content)
+        assert(len(ref_section_matches) == 1), f"Length of reference section matches object is {len(ref_section_matches)}, should be 1."
         
-    def retrieveAllContent(self):
-        with open(self.path, "r") as f:
-            file_content = f.read()
-        remove_et_all = file_content.lower().replace('et al.', 'et al')
-        numerical_sequence_citations_fixed = self.fix_numerical_sequence_citations(remove_et_all)
-        
-        return numerical_sequence_citations_fixed
-        
-            
-    def retrieveAndFormatContent(self):
-        reference_section = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', self.content)
-        
-        assert(len(reference_section) == 1), reference_section
-        reference_section = reference_section[0]
-        
+        reference_section = ref_section_matches[0]
         nonref_section = self.content.replace(reference_section, '')
         
         return nonref_section, reference_section 
