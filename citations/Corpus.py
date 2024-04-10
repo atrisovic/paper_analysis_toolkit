@@ -1,6 +1,5 @@
 from typing import List, Tuple
 from .Paper import Paper
-from math import ceil
 from tqdm import tqdm
 from .CitationClassifier import CitationClassifier
 from .Reference import Reference
@@ -8,16 +7,16 @@ from os import walk
 from os.path import join
 import pandas as pd
 import logging
+from .utils import clusterOrLimitList
 
 logger = logging.getLogger(__name__)
 
 class Corpus:
-    def __init__(self, directory, extensions, limit = 1000, cluster = None, cluster_count = None):
+    def __init__(self, directory, extensions: List[str], limit: int = None, cluster_info: Tuple[int, int] = None):
         self.limit = limit
+        self.cluster_info = cluster_info
         self.directory = directory
         self.extensions = extensions
-        self.cluster = cluster
-        self.cluster_count = cluster_count
         
         good_papers, bad_papers = self.discoverPapers()
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
@@ -31,16 +30,9 @@ class Corpus:
                                     for file in files
                                         if (file.split('.')[-1] in self.extensions)]
         
-        logger.info(f"Found {len(all_file_paths)} files. Limiting based on \"limit\" and \"cluster_count\"")
-        if (self.limit or self.cluster):
-            all_file_paths = sorted(all_file_paths) # for consistency when clustering
-            
-        if (self.limit):
-            all_file_paths = all_file_paths[:self.limit]
-            
-        if self.cluster:
-            chunk_length = ceil(len(all_file_paths)/self.cluster_count)
-            all_file_paths = all_file_paths[chunk_length * self.cluster: chunk_length * (self.cluster + 1)]
+        logger.info(f"Found {len(all_file_paths)} files. Filtering based on limit ({self.limit}) and thread workload ({self.cluster_info[0]} of {self.cluster_info[1]}).")
+        
+        all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.limit)
             
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
         good_papers, bad_papers = [], []
