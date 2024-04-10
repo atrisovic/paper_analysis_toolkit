@@ -38,7 +38,7 @@ class Paper:
         return re.sub(r'#','', first_line)
 
     def getPreAbstract(self):
-        match = re.search('#+\s?Abstract', self.content)
+        match = re.search('#+\s?abstract', self.content)
         return None if match is None else self.content[:match.start()]
     
     def normalizeNumericalCitations(self, content: str) -> str:

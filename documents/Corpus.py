@@ -92,6 +92,6 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def setAllAffliations(self, classifier: AffiliationClassifier):
+    def setAllAffiliations(self, classifier: AffiliationClassifier):
         for paper in tqdm(self.papers):
             paper.findNamesAndAffiliations(classifier=classifier)
