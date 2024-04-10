@@ -15,31 +15,60 @@ class AffiliationClassifier:
 
     def getOutputFormat(self):
       return """
-                {
-                  "contributors": [
-                      {"first": "firstname", "last": "lastname", "gender": "male | female"}...
-                  ],
-                  "institutions": ["Institution1", "Institution2"],
-                  "countries": ["country1", "country2"],
-                  "country_explanation": "Explain how you know what country it is from."
-                }
+{
+    "contributors": [
+        {"first": "firstname", "last": "lastname", "gender": "male | female"}...
+    ],
+    "institutions": ["Institution1", "Institution2"],
+    "countries": ["country1", "country2"]
+}
                 """
-
+                
     def stripJSONResult(self, response_str: str):
-        starting_index = response_str.find('[/INST]') + len('[/INST]')
-        end_index = response_str.find('</s>')
+        starting_index = response_str.rfind('[/INST]') + len('[/INST]')
+        end_index = response_str.rfind('</s>')
         return response_str[starting_index: end_index].strip()
+    
+    def formatPrompt(self, text: str):
+        return f'''Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
+                    The output should match exactly the JSON format given. The text is as follows: {text}'''
 
+    def getExamples(self):
+        example_text1 = '''# on the helpfulness of large language models
+
+bill ackendorf, Jolene baylor
+
+yuxin shu, khalid saifullah
+
+alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bob dilan
+
+\({}^{\ddagger}\) new york university, massachusetts institute of technology'''
+        example_response1 = '''
+{
+    "contributors": [
+        {"first": "Bill", "last": "Ackendorf", "gender": "male"},
+        {"first": "Jolene", "last": "Baylor", "gender": "female"},
+        {"first": "Yuxin", "last": "Shu", "gender": "female"},
+        {"first": "Khalid", "last": "Saifullah", "gender": "male"},
+        {"first": "Alex", "last": "Fogelson", "gender": "male"},
+        {"first": "Ana", "last": "Trivosic", "gender": "female"},
+        {"first": "Neil", "last": "Thompson", "gender": "male"}],
+    "institutions": ["New York University", "Massachusetts Institute of Technology"],
+    "countries": ["United States"]
+}'''
+        
+        return [(example_text1, example_response1)]
 
     def textToPrompt(self, text: str) -> TensorType:
-        prompt = f'''The following Markdown text has been stripped from the first page of an academic paper. \
-                              Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
-                              Do not guess the country or institution. Ensure that it is clearly listed in some identifiable way.
-                              The text is as follows: {text}'''
 
-        messages = [
-            {"role": "user", "content": prompt}
-        ]
+        messages = []
+        for example_text, example_response in self.getExamples():
+            messages.append({"role": "user", "content": self.formatPrompt(example_text)})
+            messages.append({"role": "assistant", "content": example_response})
+
+        messages.append(
+            {"role": "user", "content": self.formatPrompt(text)}
+        )
         
         encoded_prompt = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
 
@@ -54,16 +83,25 @@ class AffiliationClassifier:
         generated_ids = self.model.generate(input,
                                               max_new_tokens=1000,
                                               do_sample=True,
-                                              pad_token_id = self.tokenizer.eos_token_id)
+                                              pad_token_id = self.tokenizer.eos_token_id,
+                                              temperature = .25)
         raw_output: str = self.tokenizer.batch_decode(generated_ids)[0]
-
         #strip as json
         json_string_extracted: str = self.stripJSONResult(raw_output)
-        
-        try:
-            json_result = json.loads(json_string_extracted)
-        except Exception as e:
-            print(f"Error decoding JSON, returning the string itself: {e}")
-            json_result = json_string_extracted
 
+        return json_string_extracted
+    
+    
+    def classifyFromTextEnsureJSON(self, text: str) -> dict:
+        found_json = False
+        counter = 0
+        json_result = None
+        while (counter < 5 and not found_json):
+            counter += 1
+            json_string_results = self.classifyFromText(text)
+            try:
+                json_result = json.loads(json_string_results)
+                found_json = True
+            except:
+                pass
         return json_result

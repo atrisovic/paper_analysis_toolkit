@@ -20,7 +20,7 @@ def clusterOrLimitList(L: list, cluster_info: Tuple[int, int] = None, limit: int
 
     L = sorted(L) #need consistency accross jobs
     
-    L = L[:(limit + 1) or len(L)]
+    L = L[:limit or len(L)]
         
     if cluster_info:
         cluster_index, cluster_count = cluster_info

@@ -94,5 +94,5 @@ class Paper:
     
     def findNamesAndAffiliations(self, classifier: AffiliationClassifier)->dict:
         pre_abstract = self.getPreAbstract()
-        self.name_and_affiliation = classifier.classifyFromText(pre_abstract)
+        self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(pre_abstract)
         return self.name_and_affiliation
