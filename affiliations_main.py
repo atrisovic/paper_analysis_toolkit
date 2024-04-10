@@ -1,7 +1,5 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
-import json
-from os import listdir
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from documents.Corpus import Corpus
 import nltk

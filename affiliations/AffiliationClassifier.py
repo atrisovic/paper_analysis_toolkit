@@ -59,6 +59,11 @@ class AffiliationClassifier:
 
         #strip as json
         json_string_extracted: str = self.stripJSONResult(raw_output)
-        json_result = json.loads(json_string_extracted)
+        
+        try:
+            json_result = json.loads(json_string_extracted)
+        except Exception as e:
+            print(f"Error decoding JSON, returning the string itself: {e}")
+            json_result = json_string_extracted
 
         return json_result
