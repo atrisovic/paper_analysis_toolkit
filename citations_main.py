@@ -28,7 +28,7 @@ def main():
     
     
     
-    classifier = None # CitationClassifier('allenai/multicite-multilabel-scibert')
+    classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
     corpus = Corpus(markdown_file_path, extensions = ['mmd'], cluster_info = (args.index, args.workers), limit = args.limit, filter_path=args.filter_file)
 
     with open(foundation_models_path, 'r') as f:
