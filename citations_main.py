@@ -17,8 +17,8 @@ def main():
     args = parser.parse_args()
     
     right_now = datetime.now().replace(microsecond=0)
-    logfile = f"logs/logfile_{right_now}_worker{args.index}of{args.workers}.log"
-    resultsfile = f"results/results_{right_now}_worker{args.index}of{args.workers}.log"
+    logfile = f"logs/citations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
+    resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
     logging.basicConfig(filename=logfile, level=logging.INFO)
 
     markdown_file_path = './data/Markdown/'

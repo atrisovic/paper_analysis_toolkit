@@ -92,7 +92,7 @@ class Paper:
             return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
         
     
-    def findNamesAndAffiliations(self, classifier: AffiliationClassifier)->dict:
+    def findNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
         pre_abstract = self.getPreAbstract()
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(pre_abstract)
         return self.name_and_affiliation

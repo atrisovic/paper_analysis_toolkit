@@ -17,22 +17,17 @@ class AffiliationClassifier:
       return """
 {
     "contributors": [
-        {"first": "firstname", "last": "lastname", "gender": "male | female"}...
+        {
+            "first": "firstname", 
+            "last": "lastname", 
+            "gender": "male | female"
+        }...
     ],
     "institutions": ["Institution1", "Institution2"],
     "countries": ["country1", "country2"]
 }
                 """
                 
-    def stripJSONResult(self, response_str: str):
-        starting_index = response_str.rfind('[/INST]') + len('[/INST]')
-        end_index = response_str.rfind('</s>')
-        return response_str[starting_index: end_index].strip()
-    
-    def formatPrompt(self, text: str):
-        return f'''Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
-                    The output should match exactly the JSON format given. The text is as follows: {text}'''
-
     def getExamples(self):
         example_text1 = '''# on the helpfulness of large language models
 
@@ -58,6 +53,15 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
 }'''
         
         return [(example_text1, example_response1)]
+                
+    def stripJSONResult(self, response_str: str):
+        starting_index = response_str.rfind('[/INST]') + len('[/INST]')
+        end_index = response_str.rfind('</s>')
+        return response_str[starting_index: end_index].strip()
+    
+    def formatPrompt(self, text: str):
+        return f'''Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
+                    The output should match exactly the JSON format given. The text is as follows: {text}'''
 
     def textToPrompt(self, text: str) -> TensorType:
 
@@ -102,4 +106,18 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
                 json_result = json.loads(json_string_results)
             except:
                 pass
-        return json_result
+        return self.stripJSONStructure(json_result)
+    
+    
+    def stripJSONStructure(self, json: dict) -> dict:
+        new_dict = dict()
+        new_dict["institutions"] = json.get("institutions")
+        new_dict["countries"] = json.get("countries")
+        new_dict["contributors"] = []
+        
+        for person in json.get("contributors"):
+            new_person = {}
+            for attribute in ['first', 'last', 'gender']:
+                new_person[attribute] = person.get(attribute)
+        
+        return new_dict
