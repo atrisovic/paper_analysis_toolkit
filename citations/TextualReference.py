@@ -19,3 +19,4 @@ class TextualReference:
                 'score': self.score,
                 'classification_order': classification_rankings[self.classification]
                 }
+        

@@ -37,9 +37,7 @@ class Corpus:
                 filtered_content = f.read().lower()
             all_file_paths = list(filter(lambda s: basename(s).split('.')[0] in filtered_content, all_file_paths))
         
-        logger.info(f"Found {len(all_file_paths)} files (filter_path set to {self.filter_path}). Now filtering based on limit ({self.limit}) and thread workload ({self.cluster_info[0]} of {self.cluster_info[1]}).")
-        
-        all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.limit)
+        logger.info(f"Found {len(all_file_paths)} files (filter_path set to {self.filter_path}).")
             
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
         good_papers, bad_papers = [], []
@@ -85,6 +83,9 @@ class Corpus:
         logger.info(f"References successfully saved to underlying paper objects.")
             
     def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: CitationClassifier = None, resultsfile = None):
+        titles = clusterOrLimitList(titles, self.cluster_info, self.limit)
+        keys = clusterOrLimitList(keys, self.cluster_info, self.limit)
+
         logger.info(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
         for title, key in tqdm(list(zip(titles, keys))):
             self.findAllPaperReferencesByTitle(title = title, key = key, classifier=classifier)

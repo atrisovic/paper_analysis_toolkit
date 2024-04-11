@@ -11,19 +11,18 @@ logger = logging.getLogger(__name__)
 class Paper:
     def __init__(self, path: str):
         self.path: str = path
-        self.content: str = self.adjustFileContent()
         
-        self.nonref_section, self.ref_section = self.splitByReferenceSection()
+        content = self.getAdjustedFileContent()
+        self.title: str = self.getPaperTitle(content = content)
         
-        self.title: str = self.getPaperTitle()
-        
-        self.all_sentences: List[str] = sent_tokenize(self.nonref_section)
-                
+        assert(self.exactlyOneReferenceSection(content = content)), f"Not exactly one reference check. Failing."
+                        
         self.references: Dict[str, Reference] = {}
         
         self.name_and_affiliation: dict = None
         
-    def adjustFileContent(self):
+        
+    def getAdjustedFileContent(self):
         with open(self.path, "r") as f:
             file_content = ( f.read()
                                 .lower()
@@ -33,13 +32,15 @@ class Paper:
         
         return normalized
     
-    def getPaperTitle(self):
-        first_line = self.nonref_section.split('\n')[0]
+    def getPaperTitle(self, content = None):
+        content = content or self.getAdjustedFileContent()
+        first_line = self.getAdjustedFileContent().split('\n')[0]
         return re.sub(r'#','', first_line)
 
     def getPreAbstract(self):
-        match = re.search('#+\s?abstract', self.content)
-        return None if match is None else self.content[:match.start()]
+        content = self.getAdjustedFileContent()
+        match = re.search('#+\s?abstract', content)
+        return None if match is None else content[:match.start()]
     
     def normalizeNumericalCitations(self, content: str) -> str:
         # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
@@ -58,22 +59,34 @@ class Paper:
             content = re.sub('\[' + citation + '\]', corrected_citations, content)
         
         return content
+    
+    def exactlyOneReferenceSection(self, content = None):
+        content = content or self.getAdjustedFileContent()
+        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
+        return len(ref_section_matches) == 1
                     
-    def splitByReferenceSection(self):
-        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', self.content)
+    def splitByReferenceSection(self, content = None):
+        content = content or self.getAdjustedFileContent()
+        
+        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
         assert(len(ref_section_matches) == 1), f"Length of reference section matches object is {len(ref_section_matches)}, should be 1."
+
         
         reference_section = ref_section_matches[0]
-        nonref_section = self.content.replace(reference_section, '')
+        nonref_section = content.replace(reference_section, '')
         
         return nonref_section, reference_section 
         
         
     def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:
+        content = self.getAdjustedFileContent()
+        nonref_section, ref_section = self.splitByReferenceSection(content = content)
+        all_sentences = sent_tokenize(nonref_section)
+        
         reference = Reference(title = title, key = key, paper_path = self.path)
-        reference.checkMissingPageFailure(content = self.content)
-        reference.getCitationFromContent(content = self.ref_section)
-        reference.getSentencesFromContent(all_sentences=self.all_sentences)
+        reference.checkMissingPageFailure(content = content)
+        reference.getCitationFromContent(content = ref_section)
+        reference.getSentencesFromContent(all_sentences=all_sentences)
         
         if classifier:
             reference.classifyAllSentences(classifier = classifier)

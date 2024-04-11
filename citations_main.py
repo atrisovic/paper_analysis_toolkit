@@ -16,6 +16,8 @@ def main():
     
     args = parser.parse_args()
     
+    assert(args.limit is None or args.workers <= args.limit)
+    
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/citations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
     resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
@@ -26,12 +28,13 @@ def main():
     
     
     
-    classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
+    classifier = None # CitationClassifier('allenai/multicite-multilabel-scibert')
     corpus = Corpus(markdown_file_path, extensions = ['mmd'], cluster_info = (args.index, args.workers), limit = args.limit, filter_path=args.filter_file)
 
     with open(foundation_models_path, 'r') as f:
         foundational_models_json = json.load(f)
         keys, titles = list(zip(*[(key, data['title'].replace('\\infty', '∞')) for key, data in foundational_models_json.items()]))
+        keys, titles = list(keys), list(titles)
 
     corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier, resultsfile = resultsfile)
 
