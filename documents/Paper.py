@@ -55,6 +55,8 @@ class Paper:
         numerical_range_citations = re.findall('\[(\d+-\d+)\]', content)
         for citation in numerical_range_citations:
             n1, n2 = map(int, re.findall('(\d+)-(\d+)', citation)[0])
+            if (n2 - n1 > 1000): #arbitrary thresholdß
+                continue
             corrected_citations = ','.join(f'[{num}]' for num in range(n1, n2+1))
             content = re.sub('\[' + citation + '\]', corrected_citations, content)
         
