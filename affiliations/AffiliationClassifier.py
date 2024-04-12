@@ -106,16 +106,16 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
                 json_result = json.loads(json_string_results)
             except:
                 pass
-        return self.stripJSONStructure(json_result)
+        return json_result or self.stripJSONStructure(json_result)
     
     
-    def stripJSONStructure(self, json: dict) -> dict:
+    def stripJSONStructure(self, json_object: dict) -> dict:
         new_dict = dict()
-        new_dict["institutions"] = json.get("institutions")
-        new_dict["countries"] = json.get("countries")
+        new_dict["institutions"] = json_object.get("institutions")
+        new_dict["countries"] = json_object.get("countries")
         new_dict["contributors"] = []
         
-        for person in json.get("contributors"):
+        for person in json_object.get("contributors"):
             new_person = {}
             for attribute in ['first', 'last', 'gender']:
                 new_person[attribute] = person.get(attribute)
