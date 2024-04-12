@@ -5,7 +5,7 @@ from documents.Corpus import Corpus
 import nltk
 nltk.download('punkt')
 import argparse
-import datetime
+from datetime import datetime
 import logging
 
 def main():
