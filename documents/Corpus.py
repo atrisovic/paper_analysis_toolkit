@@ -9,6 +9,7 @@ from os.path import join, basename
 import pandas as pd
 import logging
 from utils.functional import clusterOrLimitList
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -104,4 +105,4 @@ class Corpus:
         for paper in tqdm(self.papers):
             results = paper.findNamesAndAffiliations(classifier=classifier)
             if f:
-                f.write(results)
+                f.write(json.dumps({paper.path: results}))
