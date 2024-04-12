@@ -106,7 +106,13 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
                 json_result = json.loads(json_string_results)
             except:
                 pass
-        return self.stripJSONStructure(json_result) if json_result else None
+        
+        try:
+            structured_json = self.stripJSONStructure(json_result) if json_result else None
+        except:
+            structured_json = None
+            
+        return structured_json
     
     
     def stripJSONStructure(self, json_object: dict) -> dict:
