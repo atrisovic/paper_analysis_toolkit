@@ -103,6 +103,9 @@ class Corpus:
     def setAllAffiliations(self, classifier: AffiliationClassifier, resultsfile: str = None):
         f = open(resultsfile, 'a') if resultsfile else None
         for paper in tqdm(self.papers):
+            logging.debug(f"Checking affiliation for paper at {paper.path}.")
             results = paper.findNamesAndAffiliations(classifier=classifier)
             if f:
-                f.write(json.dumps({paper.path: results}))
+                results_string = json.dumps({paper.path: results})
+                logger.debug(f"Writing to {resultsfile}: {results_string}")
+                f.write(results_string)
