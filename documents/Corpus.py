@@ -106,6 +106,6 @@ class Corpus:
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
             results = paper.findNamesAndAffiliations(classifier=classifier)
             if f:
-                results_string = json.dumps({paper.path: results})
+                results_string = json.dumps({paper.path: results}) + '\n'
                 logger.debug(f"Writing to {resultsfile}: {results_string}")
                 f.write(results_string)

@@ -119,5 +119,6 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
             new_person = {}
             for attribute in ['first', 'last', 'gender']:
                 new_person[attribute] = person.get(attribute)
+            new_dict["contributors"].append(new_person)
         
         return new_dict
