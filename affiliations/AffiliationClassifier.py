@@ -106,7 +106,7 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
                 json_result = json.loads(json_string_results)
             except:
                 pass
-        return json_result or self.stripJSONStructure(json_result)
+        return self.stripJSONStructure(json_result) if json_result else None
     
     
     def stripJSONStructure(self, json_object: dict) -> dict:
