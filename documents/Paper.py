@@ -16,8 +16,8 @@ class Paper:
         
         if (not self.lazy):
             self.getAdjustedFileContent()
-            self.getReferenceSectionSplit()
-            self.getSentences()
+            nonref_section, _ = self.getReferenceSectionSplit()
+            self.getSentences(nonref_section)
             
         self.setPaperTitle()
         self.setPreAbstract()

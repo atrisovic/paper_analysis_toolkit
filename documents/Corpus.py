@@ -57,7 +57,7 @@ class Corpus:
         for path in tqdm(all_file_paths):
             try:
                 good_papers.append(Paper(path, lazy = self.lazy)) #technically the append could fail, keep this in mind
-            except Exception as e:
+            except AssertionError as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))
         failure_rate = len(bad_papers)/(len(bad_papers) + len(good_papers))
