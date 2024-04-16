@@ -46,21 +46,28 @@ class Reference:
     
     def checkMissingPageFailure(self, content: str):
         self.missing_page_fail: bool = content.find('missing_page_fail') >= 0
+        
     
+    def addCitationBrackets(self, sentence: str) -> str:
+        for citation in self.citations:
+            if citation in sentence:
+                return sentence.replace(citation, f'<cite>{citation}</cite>')
+        return sentence
     
     def checkCitationInSentence(self, sentence: str) -> List[str]:
         for citation in self.citations:
             if citation in sentence:
                 return True
-            
+        
         return False
     
     def getSentencesFromContent(self, all_sentences: List[str]) -> List[str]:
         if self.citations is None:
             self.textualReferences = []
         else:
-            self.textualReferences = [TextualReference(sentence) for sentence in all_sentences if (self.checkCitationInSentence(sentence))]
+            self.textualReferences = [TextualReference(self.addCitationBrackets(sentence)) for sentence in all_sentences if (self.checkCitationInSentence(sentence))]
             
+        
         return self.textualReferences
 
     def classifyAllSentences(self, classifier: CitationClassifier):

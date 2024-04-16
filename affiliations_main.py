@@ -16,7 +16,7 @@ def main():
     parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of documents scanned.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
-    parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
+    parser.add_argument('--eagerstorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
 
     args = parser.parse_args()
     
@@ -50,7 +50,7 @@ def main():
                         cluster_info = (args.index, args.workers), 
                         paper_limit = args.limit, 
                         filter_path = args.filter_file,
-                        lazy = args.lazystorage)
+                        lazy = not args.eagerstorage)
     corpus.setAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
 
 
