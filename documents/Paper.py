@@ -25,8 +25,8 @@ class Paper:
         self.name_and_affiliation: dict = None
         
         
-    def getAdjustedFileContent(self):        
-        with open(self.path, "r") as f:
+    def getAdjustedFileContent(self):
+        with open(self.path, "r", encoding = 'utf-8') as f:
             file_content = ( f.read()
                                 .lower()
                                 .replace('et al.', 'et al')   #sentence tokenizer mistakes the period for end of sentence
@@ -41,7 +41,7 @@ class Paper:
         return re.sub(r'#','', first_line)
 
     def getPreAbstract(self):
-        content = self.getAdjustedFileContent()
+        content = self.content or self.getAdjustedFileContent()
         match = re.search('#+\s?abstract', content)
         return None if match is None else content[:match.start()]
     
@@ -84,6 +84,8 @@ class Paper:
         
         
     def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:
+        if (self.content is None):
+            logger.debug(f'No content found for page {self.path}, pulling the document again.')
         content = self.content or self.getAdjustedFileContent()
         nonref_section, ref_section = self.splitByReferenceSection(content = content)
         all_sentences = sent_tokenize(nonref_section)

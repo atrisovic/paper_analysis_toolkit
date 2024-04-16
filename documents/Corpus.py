@@ -121,3 +121,4 @@ class Corpus:
                 results_string = json.dumps({paper.path: results}) + '\n'
                 logger.debug(f"Writing to {resultsfile}: {results_string}")
                 f.write(results_string)
+        f.close()
