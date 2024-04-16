@@ -16,11 +16,14 @@ logger = logging.getLogger(__name__)
 class Corpus:
     def __init__(self, directory, 
                         extensions: List[str], 
-                        limit: int = None, 
+                        foundation_model_limit: int = None, 
+                        paper_limit: int = None,
                         cluster_info: Tuple[int, int] = None, 
                         filter_path: str = None,
                         lazy: bool = False):
-        self.limit = limit
+        
+        self.paper_limit = paper_limit
+        self.foundation_model_limit = foundation_model_limit
         self.cluster_info = cluster_info
         self.directory = directory
         self.extensions = extensions
@@ -46,6 +49,9 @@ class Corpus:
         
         logger.info(f"Found {len(all_file_paths)} files (filter_path set to {self.filter_path}).")
             
+            
+        all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.paper_limit)
+        
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
@@ -90,8 +96,8 @@ class Corpus:
         logger.info(f"References successfully saved to underlying paper objects.")
             
     def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: CitationClassifier = None, resultsfile = None):
-        titles = clusterOrLimitList(titles, self.cluster_info, self.limit)
-        keys = clusterOrLimitList(keys, self.cluster_info, self.limit)
+        titles = clusterOrLimitList(titles, self.cluster_info, self.foundation_model_limit)
+        keys = clusterOrLimitList(keys, self.cluster_info, self.foundation_model_limit)
 
         logger.info(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
         for title, key in tqdm(list(zip(titles, keys))):
