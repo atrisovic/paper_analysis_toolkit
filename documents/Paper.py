@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 class Paper:
     def __init__(self, path: str, lazy = False):
         self.path: str = path
+        self.lazy: bool = lazy
+        self.content, self.nonref_section, self.ref_section = None, None, None
         
-        content = self.getAdjustedFileContent()
-        
-        self.content = None if lazy else content
+        self.getAdjustedFileContent()
             
-        self.title: str = self.getPaperTitle(content = content)
+        self.title: str = self.getPaperTitle()
         
-        assert(self.exactlyOneReferenceSection(content = content)), f"Not exactly one reference check. Failing."
+        assert(self.exactlyOneReferenceSection()), f"Not exactly one reference check. Failing."
                         
         self.references: Dict[str, Reference] = {}
         
@@ -26,6 +26,9 @@ class Paper:
         
         
     def getAdjustedFileContent(self):
+        if (self.content is not None):
+            return self.content
+    
         with open(self.path, "r", encoding = 'utf-8') as f:
             file_content = ( f.read()
                                 .lower()
@@ -33,10 +36,12 @@ class Paper:
                                 )
         normalized = self.normalizeNumericalCitations(file_content)
         
+        if (not self.lazy):
+            self.content = normalized
+        
         return normalized
     
-    def getPaperTitle(self, content = None):
-        content = content or self.getAdjustedFileContent()
+    def getPaperTitle(self):
         first_line = self.getAdjustedFileContent().split('\n')[0]
         return re.sub(r'#','', first_line)
 
@@ -65,12 +70,15 @@ class Paper:
         
         return content
     
-    def exactlyOneReferenceSection(self, content = None):
-        content = content or self.getAdjustedFileContent()
+    def exactlyOneReferenceSection(self):
+        content = self.getAdjustedFileContent()
         ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
         return len(ref_section_matches) == 1
                     
     def splitByReferenceSection(self, content = None):
+        if (self.ref_section is not None and self.nonref_section is not None):
+            return self.nonref_section, self.ref_section
+        
         content = content or self.getAdjustedFileContent()
         
         ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
@@ -79,6 +87,9 @@ class Paper:
         
         reference_section = ref_section_matches[0]
         nonref_section = content.replace(reference_section, '')
+    
+        if (not self.lazy):
+            self.nonref_section, self.ref_section = nonref_section, reference_section
         
         return nonref_section, reference_section 
         
@@ -87,9 +98,9 @@ class Paper:
         if (self.content is None):
             logger.debug(f'No content found for page {self.path}, pulling the document again.')
         
-        logger.debug(f"Finding citations at time {datetime.now()}")
-        content = self.content or self.getAdjustedFileContent()
-        nonref_section, ref_section = self.splitByReferenceSection(content = content)
+        
+        content = self.getAdjustedFileContent()
+        nonref_section, ref_section = self.splitByReferenceSection()
         all_sentences = sent_tokenize(nonref_section)
         reference = Reference(title = title, key = key, paper_path = self.path)
         reference.checkMissingPageFailure(content = content)
@@ -97,7 +108,6 @@ class Paper:
         reference.getSentencesFromContent(all_sentences=all_sentences)
         
         if classifier:
-            logger.debug(f"Classifiying at time {datetime.now()}")
             reference.classifyAllSentences(classifier = classifier)
 
         self.references[key] = reference
