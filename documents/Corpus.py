@@ -14,12 +14,18 @@ import json
 logger = logging.getLogger(__name__)
 
 class Corpus:
-    def __init__(self, directory, extensions: List[str], limit: int = None, cluster_info: Tuple[int, int] = None, filter_path: str = None):
+    def __init__(self, directory, 
+                        extensions: List[str], 
+                        limit: int = None, 
+                        cluster_info: Tuple[int, int] = None, 
+                        filter_path: str = None,
+                        lazy: bool = False):
         self.limit = limit
         self.cluster_info = cluster_info
         self.directory = directory
         self.extensions = extensions
         self.filter_path = filter_path
+        self.lazy = lazy
         
         good_papers, bad_papers = self.discoverPapers()
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
@@ -44,7 +50,7 @@ class Corpus:
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
             try:
-                good_papers.append(Paper(path)) #technically the append could fail, keep this in mind
+                good_papers.append(Paper(path, lazy = self.lazy)) #technically the append could fail, keep this in mind
             except Exception as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))

@@ -14,6 +14,7 @@ def main():
     parser.add_argument('-l', '--limit', type = int, help = 'Max amount of documents to process. Default is None.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
+    parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
 
     args = parser.parse_args()
     
@@ -30,7 +31,12 @@ def main():
     
     
     classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
-    corpus = Corpus(markdown_file_path, extensions = ['mmd'], cluster_info = (args.index, args.workers), limit = args.limit, filter_path=args.filter_file)
+    corpus = Corpus(markdown_file_path, 
+                        extensions = ['mmd'], 
+                        cluster_info = (args.index, args.workers), 
+                        limit = args.limit, 
+                        filter_path=args.filter_file, 
+                        lazy = args.lazystorage)
 
     with open(foundation_models_path, 'r') as f:
         foundational_models_json = json.load(f)

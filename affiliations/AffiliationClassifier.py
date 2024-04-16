@@ -89,10 +89,11 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
                                               do_sample=True,
                                               pad_token_id = self.tokenizer.eos_token_id,
                                               temperature = .25)
+        
         raw_output: str = self.tokenizer.batch_decode(generated_ids)[0]
         #strip as json
         json_string_extracted: str = self.stripJSONResult(raw_output)
-
+        
         return json_string_extracted
     
     
