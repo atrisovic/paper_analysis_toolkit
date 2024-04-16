@@ -98,16 +98,23 @@ class Paper:
         if (self.content is None):
             logger.debug(f'No content found for page {self.path}, pulling the document again.')
         
-        
+        logger.debug(f"Getting file content at {datetime.now()}")
         content = self.getAdjustedFileContent()
+        logger.debug(f"Splitting file content by reference section at {datetime.now()}")
         nonref_section, ref_section = self.splitByReferenceSection()
+        logger.debug(f"Tokenizing sentences {datetime.now()}")
         all_sentences = sent_tokenize(nonref_section)
+        logger.debug(f"Creating reference object at {datetime.now()}")
         reference = Reference(title = title, key = key, paper_path = self.path)
+        logger.debug(f"Checking for missing page failure at {datetime.now()}")
         reference.checkMissingPageFailure(content = content)
+        logger.debug(f"Running get citation from cnotent at {datetime.now()}")
         reference.getCitationFromContent(content = ref_section)
+        logger.debug(f"Getting sentences from context at {datetime.now()}")
         reference.getSentencesFromContent(all_sentences=all_sentences)
         
         if classifier:
+            logger.debug(f"Getting file content at {datetime.now()}")
             reference.classifyAllSentences(classifier = classifier)
 
         self.references[key] = reference
