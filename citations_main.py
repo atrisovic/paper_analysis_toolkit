@@ -6,6 +6,7 @@ from datetime import datetime
 import argparse
 
 logger = logging.getLogger(__name__)
+warnings.filterwarnings("ignore")
 
 def main():        
     parser = argparse.ArgumentParser()
