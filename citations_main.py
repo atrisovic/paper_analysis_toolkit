@@ -13,7 +13,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--index', default = 1, type = int, help = 'One-indexed index of worker for this particular job.')
     parser.add_argument('-n', '--workers', default = 1, type = int, help = 'Total jobs to be run *in separate jobs*')
-    parser.add_argument('-l', '--limit', type = int, help = 'Max amount of documents to process. Default is None.')
+    parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of foundation models analyzed.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
     parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
