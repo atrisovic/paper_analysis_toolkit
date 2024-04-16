@@ -51,7 +51,11 @@ def main():
         
 
     aff_classifier = AffiliationClassifier(model, tokenizer, device)
-    corpus = Corpus(markdown_file_path, extensions = ['mmd'], cluster_info = (args.index, args.workers), limit = args.limit, filter_path = args.filter_file)
+    corpus = Corpus(markdown_file_path, 
+                        extensions = ['mmd'], 
+                        cluster_info = (args.index, args.workers), 
+                        limit = args.limit, 
+                        filter_path = args.filter_file)
     corpus.setAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
 
 

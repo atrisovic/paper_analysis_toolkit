@@ -14,7 +14,7 @@ class Paper:
         
         content = self.getAdjustedFileContent()
         
-        self.content = None if self.lazy else content
+        self.content = None if lazy else content
             
         self.title: str = self.getPaperTitle(content = content)
         
