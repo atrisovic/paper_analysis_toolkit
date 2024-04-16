@@ -4,6 +4,7 @@ import json, pickle
 import warnings, logging
 from datetime import datetime
 import argparse
+from config import FOUNDATION_MODELS_PATH, MARKDOWN_FILES_PATH, CITATION_MODEL_PATH
 
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
@@ -24,22 +25,18 @@ def main():
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/citations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
     resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
-    logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
-
-    markdown_file_path = './data/Markdown/'
-    foundation_models_path = './data/foundation_models.json'
+    logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)    
     
     
-    
-    classifier = CitationClassifier('allenai/multicite-multilabel-scibert')
-    corpus = Corpus(markdown_file_path, 
+    classifier = CitationClassifier(CITATION_MODEL_PATH)
+    corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
                         cluster_info = (args.index, args.workers), 
                         foundation_model_limit = args.limit, 
                         filter_path=args.filter_file, 
                         lazy = args.lazystorage)
 
-    with open(foundation_models_path, 'r') as f:
+    with open(FOUNDATION_MODELS_PATH, 'r') as f:
         foundational_models_json = json.load(f)
         keys, titles = list(zip(*[(key, data['title'].replace('\\infty', '∞')) for key, data in foundational_models_json.items()]))
         keys, titles = list(keys), list(titles)
