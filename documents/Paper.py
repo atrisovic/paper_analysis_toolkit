@@ -9,10 +9,13 @@ from affiliations.AffiliationClassifier import AffiliationClassifier
 logger = logging.getLogger(__name__)
 
 class Paper:
-    def __init__(self, path: str):
+    def __init__(self, path: str, lazy = False):
         self.path: str = path
         
         content = self.getAdjustedFileContent()
+        
+        self.content = None if self.lazy else content
+            
         self.title: str = self.getPaperTitle(content = content)
         
         assert(self.exactlyOneReferenceSection(content = content)), f"Not exactly one reference check. Failing."
@@ -22,7 +25,7 @@ class Paper:
         self.name_and_affiliation: dict = None
         
         
-    def getAdjustedFileContent(self):
+    def getAdjustedFileContent(self):        
         with open(self.path, "r") as f:
             file_content = ( f.read()
                                 .lower()
@@ -81,7 +84,7 @@ class Paper:
         
         
     def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:
-        content = self.getAdjustedFileContent()
+        content = self.content or self.getAdjustedFileContent()
         nonref_section, ref_section = self.splitByReferenceSection(content = content)
         all_sentences = sent_tokenize(nonref_section)
         

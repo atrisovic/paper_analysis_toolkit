@@ -13,5 +13,7 @@ class CitationClassifier:
         self.classifier = pipeline('text-classification', model=model, tokenizer=tokenizer, device = device)
 
     def classify_text(self, text) -> Tuple[str, float]:
-        results = self.classifier(text, truncation = True)[-1]
-        return results['label'], results['score']
+        results = self.classifier(text, truncation = True)
+        as_dictionary = {result['label']: result['score'] for result in results}
+
+        return max(as_dictionary, key=as_dictionary.get)

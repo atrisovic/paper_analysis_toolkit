@@ -8,7 +8,7 @@ class TextualReference:
         self.score: float = None
         
     def classify(self, classifier: CitationClassifier):
-        self.classification, self.score = classifier.classify_text(self.sentence)
+        self.classification = classifier.classify_text(self.sentence)
     
     def as_dict(self):
         order_class_values = ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background']
