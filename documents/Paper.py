@@ -4,7 +4,7 @@ from typing import List, Dict
 from nltk.tokenize import sent_tokenize
 import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
-
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
@@ -86,16 +86,18 @@ class Paper:
     def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:
         if (self.content is None):
             logger.debug(f'No content found for page {self.path}, pulling the document again.')
+        
+        logger.debug(f"Finding citations at time {datetime.now()}")
         content = self.content or self.getAdjustedFileContent()
         nonref_section, ref_section = self.splitByReferenceSection(content = content)
         all_sentences = sent_tokenize(nonref_section)
-        
         reference = Reference(title = title, key = key, paper_path = self.path)
         reference.checkMissingPageFailure(content = content)
         reference.getCitationFromContent(content = ref_section)
         reference.getSentencesFromContent(all_sentences=all_sentences)
         
         if classifier:
+            logger.debug(f"Classifiying at time {datetime.now()}")
             reference.classifyAllSentences(classifier = classifier)
 
         self.references[key] = reference
