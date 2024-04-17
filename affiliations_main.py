@@ -2,12 +2,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from documents.Corpus import Corpus
-import nltk
-nltk.download('punkt')
-import argparse
-from datetime import datetime
-import logging
+from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
+import nltk, logging, argparse
+nltk.download('punkt')
 
 def main():
     parser = argparse.ArgumentParser()

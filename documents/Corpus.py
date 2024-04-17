@@ -1,5 +1,5 @@
 from typing import List, Tuple
-from .Paper import Paper
+from documents.Paper import Paper
 from tqdm import tqdm
 from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
