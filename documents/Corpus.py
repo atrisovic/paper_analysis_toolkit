@@ -22,7 +22,8 @@ class Corpus:
                         paper_limit: int = None,
                         cluster_info: Tuple[int, int] = None, 
                         filter_path: str = None,
-                        lazy: bool = False):
+                        lazy: bool = False,
+                        confirm_paper_ref_sections: bool = True):
         
         self.paper_limit: int = paper_limit
         self.foundation_model_limit: int = foundation_model_limit
@@ -31,6 +32,7 @@ class Corpus:
         self.extensions: List[str] = extensions
         self.filter_path: str = filter_path
         self.lazy: bool = lazy
+        self.confirm_paper_ref_sections: bool = confirm_paper_ref_sections
         
         self.setPapersLists()
 
@@ -58,7 +60,7 @@ class Corpus:
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
             try:
-                good_papers.append(Paper(path, lazy = self.lazy))
+                good_papers.append(Paper(path, lazy = self.lazy, confirm_reference_section=self.confirm_paper_ref_sections))
             except AssertionError as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))

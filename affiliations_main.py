@@ -48,7 +48,8 @@ def main():
                         cluster_info = (args.index, args.workers), 
                         paper_limit = args.limit, 
                         filter_path = args.filter_file,
-                        lazy = not args.eagerstorage)
+                        lazy = not args.eagerstorage,
+                        confirm_paper_ref_sections=False)
     corpus.setAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
 
 

@@ -5,11 +5,12 @@ from nltk.tokenize import sent_tokenize
 import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from datetime import datetime
+from utils.functional import implies
 
 logger = logging.getLogger(__name__)
 
 class Paper:
-    def __init__(self, path: str, lazy = False):
+    def __init__(self, path: str, lazy = False, confirm_reference_section = True):
         self.path: str = path
         self.lazy: bool = lazy
         self.content, self.nonref_section, self.ref_section, self.sentences = None, None, None, None
@@ -21,12 +22,13 @@ class Paper:
             
         self.setPaperTitle()
         self.setPreAbstract()
-        
-        assert(self.exactlyOneReferenceSection()), f"Not exactly one reference check. Failing."
-                        
+                                
         self.references: Dict[str, Reference] = {}
         
         self.name_and_affiliation: dict = None
+        
+        assert(implies(confirm_reference_section, self.exactlyOneReferenceSection())), f"Not exactly one reference check. Failing."
+
         
         
     def getAdjustedFileContent(self):
