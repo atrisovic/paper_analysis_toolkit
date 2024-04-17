@@ -32,7 +32,7 @@ def main():
     refresh = False
     try:
         assert(not refresh)
-        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device)
+        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
         tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH)
     except:
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)

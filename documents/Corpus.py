@@ -117,8 +117,12 @@ class Corpus:
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
             results = paper.findNamesAndAffiliations(classifier=classifier)
+            
             if f:
                 results_string = json.dumps({paper.path: results}) + '\n'
                 logger.debug(f"Writing to {resultsfile}: {results_string}")
                 f.write(results_string)
-        f.close()
+                f.flush()
+                
+        if f:
+            f.close()
