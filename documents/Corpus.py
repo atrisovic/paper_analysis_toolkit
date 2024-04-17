@@ -32,9 +32,9 @@ class Corpus:
         self.filter_path: str = filter_path
         self.lazy: bool = lazy
         
-        self.setGoodAndBadPapers()
+        self.setPapersLists()
 
-    def setGoodAndBadPapers(self) -> List[Paper]:
+    def setPapersLists(self) -> List[Paper]:
         logger.info(f"Discovering all files in directory {self.directory} with extensions in {self.extensions}.")
         
         all_file_paths = []
@@ -68,6 +68,7 @@ class Corpus:
                         
         self.good_papers: List[Paper] = good_papers
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
+        self.papers = good_papers + bad_papers
  
         return good_papers, bad_papers
     
