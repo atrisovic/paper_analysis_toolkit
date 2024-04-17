@@ -1,20 +1,22 @@
-from typing import List, Tuple
 from documents.Paper import Paper
-from tqdm import tqdm
 from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
 from affiliations.AffiliationClassifier import AffiliationClassifier
+from utils.functional import clusterOrLimitList
+
+from typing import List, Tuple
+from tqdm import tqdm
 from os import walk
 from os.path import join, basename
-import pandas as pd
-import logging
-from utils.functional import clusterOrLimitList
-import json
+
+import pandas as pd, logging, json
 
 logger = logging.getLogger(__name__)
 
+
+
 class Corpus:
-    def __init__(self, directory, 
+    def __init__(self, directory: str, 
                         extensions: List[str], 
                         foundation_model_limit: int = None, 
                         paper_limit: int = None,
@@ -22,20 +24,19 @@ class Corpus:
                         filter_path: str = None,
                         lazy: bool = False):
         
-        self.paper_limit = paper_limit
-        self.foundation_model_limit = foundation_model_limit
-        self.cluster_info = cluster_info
-        self.directory = directory
-        self.extensions = extensions
-        self.filter_path = filter_path
-        self.lazy = lazy
+        self.paper_limit: int = paper_limit
+        self.foundation_model_limit: int = foundation_model_limit
+        self.cluster_info: Tuple[int, int] = cluster_info
+        self.directory: str = directory
+        self.extensions: List[str] = extensions
+        self.filter_path: str = filter_path
+        self.lazy: bool = lazy
         
-        good_papers, bad_papers = self.discoverPapers()
-        self.bad_papers: List[Tuple[str, Exception]] = bad_papers
-        self.papers: List[Paper] = good_papers
+        self.setGoodAndBadPapers()
 
-    def discoverPapers(self) -> List[Paper]:
+    def setGoodAndBadPapers(self) -> List[Paper]:
         logger.info(f"Discovering all files in directory {self.directory} with extensions in {self.extensions}.")
+        
         all_file_paths = []
         for root, dirs, files in walk(self.directory):
             all_file_paths += [join(root, file)
@@ -53,22 +54,27 @@ class Corpus:
         all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.paper_limit)
         
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
+        
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
             try:
-                good_papers.append(Paper(path, lazy = self.lazy)) #technically the append could fail, keep this in mind
+                good_papers.append(Paper(path, lazy = self.lazy))
             except AssertionError as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))
+                
         failure_rate = len(bad_papers)/(len(bad_papers) + len(good_papers))
         logger.info(f"Finished loading papers for corpus. {round(failure_rate * 100, 2)}% of papers threw an error. See Corpus.bad_papers.")
                         
+        self.good_papers: List[Paper] = good_papers
+        self.bad_papers: List[Tuple[str, Exception]] = bad_papers
  
         return good_papers, bad_papers
     
         
     def saveClassificationByTitle(self, title: str, key: str, resultsfile: str):
-        logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}.).")
+        logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}...).")
+        
         textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('FM_key') == key]
         df = pd.DataFrame.from_dict(textRefByKey)
         

@@ -23,7 +23,10 @@ class AffiliationClassifier:
             "gender": "male | female"
         }...
     ],
-    "institutions": ["Institution1", "Institution2"],
+    "institutions": [
+        {"name": "Institution1", "type": "Academic | Industry"},
+        {"name": "Institution2", "type": "Academic | Industry"}
+    ],
     "countries": ["country1", "country2"]
 }
                 """
@@ -48,7 +51,10 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
         {"first": "Alex", "last": "Fogelson", "gender": "male"},
         {"first": "Ana", "last": "Trivosic", "gender": "female"},
         {"first": "Neil", "last": "Thompson", "gender": "male"}],
-    "institutions": ["New York University", "Massachusetts Institute of Technology"],
+    "institutions": [
+        {"name": "New York University", "type": "Academic"},
+        {"name": "Massachusetts Institute of Technology", "type": "Academic"}
+        ],
     "countries": ["United States"]
 }'''
         
@@ -118,8 +124,10 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
     
     def stripJSONStructure(self, json_object: dict) -> dict:
         new_dict = dict()
-        new_dict["institutions"] = json_object.get("institutions")
         new_dict["countries"] = json_object.get("countries")
+
+
+        new_dict["institutions"] = [] 
         new_dict["contributors"] = []
         
         for person in json_object.get("contributors"):
@@ -127,5 +135,11 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
             for attribute in ['first', 'last', 'gender']:
                 new_person[attribute] = person.get(attribute)
             new_dict["contributors"].append(new_person)
+        
+        for institution in json_object.get("institutions"):
+            new_institution = {}
+            for attribute in ['name', 'type']:
+                new_institution[attribute] = institution.get(attribute)
+            new_dict['institutions'].append(new_institution)
         
         return new_dict
