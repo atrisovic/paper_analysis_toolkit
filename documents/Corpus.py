@@ -66,9 +66,8 @@ class Corpus:
         failure_rate = len(bad_papers)/(len(bad_papers) + len(good_papers))
         logger.info(f"Finished loading papers for corpus. {round(failure_rate * 100, 2)}% of papers threw an error. See Corpus.bad_papers.")
                         
-        self.good_papers: List[Paper] = good_papers
+        self.papers: List[Paper] = good_papers
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
-        self.papers = good_papers + bad_papers
  
         return good_papers, bad_papers
     
