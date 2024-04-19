@@ -103,7 +103,7 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
         return json_string_extracted
     
     
-    def classifyFromTextEnsureJSON(self, text: str, tolerance = 5) -> dict:
+    def classifyFromTextEnsureJSON(self, text: str, tolerance = 5) -> dict:            
         counter = 0
         json_result = None
         while (counter < tolerance and not json_result):

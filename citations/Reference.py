@@ -63,7 +63,7 @@ class Reference:
         
         return False
     
-    def getSentencesFromContent(self, all_sentences: List[str]) -> List[str]:
+    def getTextualReferencesFromSentences(self, all_sentences: List[str]) -> List[str]:
         if self.citations is None:
             self.textualReferences = []
         else:

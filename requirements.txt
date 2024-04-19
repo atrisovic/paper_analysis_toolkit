@@ -1,3 +1,8 @@
-transformers==4.39.2
-accelerate==0.29.2
-bitsandbytes==0.43.1
+transformers>=4.39.2
+accelerate>=0.29.2
+bitsandbytes>=0.42
+datasets
+scikit-learn
+seaborn
+matplotlib
+nltk

@@ -28,7 +28,6 @@ class Paper:
         self.name_and_affiliation: dict = None
         
         assert(implies(confirm_reference_section, self.exactlyOneReferenceSection())), f"Not exactly one reference check. Failing."
-
         
         
     def getAdjustedFileContent(self):
@@ -122,7 +121,7 @@ class Paper:
         reference = Reference(title = title, key = key, paper_path = self.path)
         reference.checkMissingPageFailure(content = content)
         reference.getCitationFromContent(content = ref_section)
-        reference.getSentencesFromContent(all_sentences=all_sentences)
+        reference.getTextualReferencesFromSentences(all_sentences=all_sentences)
         
         if classifier:
             reference.classifyAllSentences(classifier = classifier)
