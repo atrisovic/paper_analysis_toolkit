@@ -2,7 +2,7 @@ from citations.TextualReference import TextualReference
 from citations.CitationClassifier import CitationClassifier
 from utils.functional import implies
 
-from typing import List
+from typing import List, Dict, Set
 
 import regex as re
 
@@ -63,12 +63,16 @@ class Reference:
         
         return False
     
-    def getTextualReferencesFromSentences(self, all_sentences: List[str]) -> List[str]:
+    def getTextualReferencesFromSentences(self, all_sentences: Dict[str, Set[str]]) -> List[str]:
         if self.citations is None:
             self.textualReferences = []
-        else:
-            self.textualReferences = [TextualReference(self.addCitationBrackets(sentence)) for sentence in all_sentences if (self.checkCitationInSentence(sentence))]
-            
+            return
+        
+        self.textualReferences = []
+        for sentence, labels in all_sentences.items(): 
+            if self.checkCitationInSentence(sentence):
+                newTextRef = TextualReference(self.addCitationBrackets(sentence), labels=labels) 
+                self.textualReferences.append(newTextRef)
         
         return self.textualReferences
 

@@ -1,127 +1,143 @@
 from citations.Reference import Reference
 import regex as re
-from typing import List, Dict
+from typing import List, Dict, Optional
 from nltk.tokenize import sent_tokenize
 import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from datetime import datetime
 from utils.functional import implies
+import numpy as np
+
 
 logger = logging.getLogger(__name__)
+
+class ReferenceSectionCountException(Exception):
+    def __init__(self, message):
+        self.message = message
+        super().__init__(self.message)
 
 class Paper:
     def __init__(self, path: str, lazy = False, confirm_reference_section = True):
         self.path: str = path
         self.lazy: bool = lazy
-        self.content, self.nonref_section, self.ref_section, self.sentences = None, None, None, None
+
+        self.sections: List[str] = None
+        self.sentences: Dict[str, List[str]] = None
+        self.references: Dict[str, Reference]= {}
+        self.name_and_affiliation: dict = None
         
+    
         if (not self.lazy):
-            self.getAdjustedFileContent()
-            nonref_section, _ = self.getReferenceSectionSplit()
-            self.getSentences(nonref_section)
+            self.getSections()
+            self.getSentences()
             
         self.setPaperTitle()
         self.setPreAbstract()
                                 
-        self.references: Dict[str, Reference] = {}
-        
-        self.name_and_affiliation: dict = None
-        
-        assert(implies(confirm_reference_section, self.exactlyOneReferenceSection())), f"Not exactly one reference check. Failing."
+        if (confirm_reference_section):
+            self.checkReferenceSectionCount()
         
         
-    def getAdjustedFileContent(self):
-        if (self.content is not None):
-            return self.content
+    def getContent(self):
+        sections = self.getSections()
+        content =  ' '.join(section['content'] for section in sections)
+        assert(len(content) > 0) 
+        return content
     
+    def getSections(self) -> List[dict]:
+        if (self.sections is not None):
+            return self.sections
+        
         with open(self.path, "r", encoding = 'utf-8') as f:
             file_content = ( f.read()
                                 .lower()
                                 .replace('et al.', 'et al')   #sentence tokenizer mistakes the period for end of sentence
                                 )
-        normalized = self.normalizeNumericalCitations(file_content)
+        content = self.normalizeNumericalCitations(file_content)
+        
+        sections = [{'content': '## ' + section} for section in filter(None, re.split("\n##(?=[^#])", content))]
+        
+        for section in sections:
+            section['labels'] = self.labelSection(section['content'])
+            
+        sections[0]['labels'].add('first')
         
         if (not self.lazy):
-            self.content = normalized
-        
-        return normalized
-    
-    def setPaperTitle(self, content = None):      
-        content = content or self.getAdjustedFileContent()   
-        first_line = content.split('\n')[0]
-        paper_title = re.sub(r'#','', first_line)
-        self.title = paper_title   
-        
-    def setPreAbstract(self, content = None):
-        content = content or self.getAdjustedFileContent()
-        match = re.search('#+\s?abstract', content)
-        self.pre_abstract = None if match is None else content[:match.start()]
-        
-    def normalizeNumericalCitations(self, content: str) -> str:
-        # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
-        numerical_sequence_citations = [match[0] for match in re.findall('\[((\d+\s*[,;]\s*)+\d+)\]', content)]
-        
-        for sequence in numerical_sequence_citations:
-            corrected_citations = ','.join(f'[{num}]' for num in map(int, re.split('[,;]\s*', sequence)))
-            content = re.sub('\[' + sequence + '\]', corrected_citations, content)
+            self.sections = sections
             
-            
-        # [1-5] =====> [1],[2],[3],[4],[5]
-        numerical_range_citations = re.findall('\[(\d+-\d+)\]', content)
-        for citation in numerical_range_citations:
-            n1, n2 = map(int, re.findall('(\d+)-(\d+)', citation)[0])
-            if (n2 - n1 > 1000): #arbitrary thresholdß
-                continue
-            corrected_citations = ','.join(f'[{num}]' for num in range(n1, n2+1))
-            content = re.sub('\[' + citation + '\]', corrected_citations, content)
-        
-        return content
+        return sections
     
-    def exactlyOneReferenceSection(self):
-        content = self.getAdjustedFileContent()
-        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
-        return len(ref_section_matches) == 1
-                    
-    def getReferenceSectionSplit(self, content = None):
-        if (self.ref_section is not None and self.nonref_section is not None):
-            return self.nonref_section, self.ref_section
-        
-        content = content or self.getAdjustedFileContent()
-        
-        ref_section_matches = re.findall('(#+\s?references[\s\S]*?)(?=#+\s*appendix|\Z)', content)
-        assert(len(ref_section_matches) == 1), f"Length of reference section matches object is {len(ref_section_matches)}, should be 1."
-
-        
-        reference_section = ref_section_matches[0]
-        nonref_section = content.replace(reference_section, '')
     
-        if (not self.lazy):
-            self.nonref_section, self.ref_section = nonref_section, reference_section
-        
-        return nonref_section, reference_section 
-    
-    def getSentences(self, nonref_section):
+    def getSentences(self):
         if (self.sentences is not None):
             return self.sentences
         
-        all_sentences = sent_tokenize(nonref_section)
+        nonref_sections = self.getSectionsByLabel(label = 'reference', complement=True, join = False)      
+        
+        all_sentences = {}
+        for section in nonref_sections:  
+            sentences = sent_tokenize(section['content'])
+            all_sentences |= {sentence: section['labels'] for sentence in sentences}
         
         if (not self.lazy):
             self.sentences = all_sentences
         
         return all_sentences
+    
+    def getSectionsByLabel(self, label: str, complement: bool = False, join: bool = True):
+        sections = self.getSections()
         
-    def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:
-        if (self.content is None):
+        selection_function = lambda labels: (not complement) == (label in labels)
+        
+        valid_sections = [section for section in sections if selection_function(section['labels'])]
+        
+        if join:
+            return ''.join([section['content'] for section in valid_sections])
+        
+        return valid_sections
+    
+    def setPaperTitle(self, content = None):      
+        content = content or self.getContent()   
+        first_line = content.split('\n')[0]
+        paper_title = re.sub(r'#','', first_line)
+        self.title = paper_title   
+        
+    def setPreAbstract(self, content = None):
+        content = content or self.getContent()
+        match = re.search(r'#+\s?abstract', content)
+        self.pre_abstract = None if match is None else content[:match.start()]
+        
+    def normalizeNumericalCitations(self, content: str) -> str:
+        # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
+        numerical_sequence_citations = [match[0] for match in re.findall(r'\[((\d+\s*[,;]\s*)+\d+)\]', content)]
+        
+        for sequence in numerical_sequence_citations:
+            corrected_citations = ','.join(f'[{num}]' for num in map(int, re.split(r'[,;]\s*', sequence)))
+            content = re.sub(r'\[' + sequence + r'\]', corrected_citations, content)
+            
+            
+        # [1-5] =====> [1],[2],[3],[4],[5]
+        numerical_range_citations = re.findall(r'\[(\d+-\d+)\]', content)
+        for citation in numerical_range_citations:
+            n1, n2 = map(int, re.findall(r'(\d+)-(\d+)', citation)[0])
+            if (n2 - n1 > 1000): #arbitrary thresholdß
+                continue
+            corrected_citations = ','.join(f'[{num}]' for num in range(n1, n2+1))
+            content = re.sub(r'\[' + citation + r'\]', corrected_citations, content)
+        
+        return content
+    
+    def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:        
+        content = self.getContent()
+        
+        if (content is None):
             logger.debug(f'No content found for page {self.path}, pulling the document again.')
-        
-        content = self.getAdjustedFileContent()
-        nonref_section, ref_section = self.getReferenceSectionSplit()
-        all_sentences = self.getSentences(nonref_section)
+
         reference = Reference(title = title, key = key, paper_path = self.path)
         reference.checkMissingPageFailure(content = content)
-        reference.getCitationFromContent(content = ref_section)
-        reference.getTextualReferencesFromSentences(all_sentences=all_sentences)
+        
+        reference.getCitationFromContent(content = self.getSectionsByLabel(label = 'reference'))
+        reference.getTextualReferencesFromSentences(all_sentences=self.getSentences())
         
         if classifier:
             reference.classifyAllSentences(classifier = classifier)
@@ -130,16 +146,38 @@ class Paper:
         
         return reference
     
-    def getAllReferences(self):
-        return [item for _, item in self.references.items()]
-    
     def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
         if (as_dict):
             return [text_ref | {'paper': self.title} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
         else:
             return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
-        
     
     def findNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)
         return self.name_and_affiliation
+    
+    def getGenericHeadingCheckerFunction(self, *args):    
+        generate_regex = lambda s: r'(#+\s*(?:\d*|[ivx]*)\.?\s*' + f"{s})"
+        check_all_regex = lambda s: np.array([bool(re.findall(generate_regex(header),s)) 
+                                                for header in args]
+                                             ).any()
+        return check_all_regex
+        
+    def labelSection(self, content: str):    
+        mappings = {
+                            'reference': self.getGenericHeadingCheckerFunction('references', 'citations'),
+                            'method': self.getGenericHeadingCheckerFunction('methodology', 'method', 'approach', 'experiment'),
+                            'abstract': self.getGenericHeadingCheckerFunction('abstract'),
+                            'appendix': self.getGenericHeadingCheckerFunction('appendix'),
+                            'background': self.getGenericHeadingCheckerFunction('introduction', 'related work', 'background'),
+                            'conclusion': self.getGenericHeadingCheckerFunction('conclusion', 'discussion'),
+                            'results': self.getGenericHeadingCheckerFunction('results')
+        }
+        
+        labels = {label for label, func in mappings.items() if func(content)}
+        return labels
+    
+    def checkReferenceSectionCount(self):
+        ref_sections = self.getSectionsByLabel(label = 'reference', join = False)
+        if (len(ref_sections) != 1):
+            raise ReferenceSectionCountException(message = f"Found {len(ref_sections)} sections labeled 'reference'.") 

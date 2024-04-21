@@ -1,4 +1,4 @@
-from documents.Paper import Paper
+from documents.Paper import Paper, ReferenceSectionCountException
 from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
 from affiliations.AffiliationClassifier import AffiliationClassifier
@@ -61,7 +61,7 @@ class Corpus:
         for path in tqdm(all_file_paths):
             try:
                 good_papers.append(Paper(path, lazy = self.lazy, confirm_reference_section=self.confirm_paper_ref_sections))
-            except AssertionError as e:
+            except ReferenceSectionCountException as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))
                 
@@ -115,7 +115,7 @@ class Corpus:
             
             
     def getAllReferences(self) -> List[Tuple[Paper, Reference]]:
-        return [reference for paper in self.papers for reference in paper.getAllReferences()]
+        return [reference for paper in self.papers for ref_name, reference in paper.references.items()]
         
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
