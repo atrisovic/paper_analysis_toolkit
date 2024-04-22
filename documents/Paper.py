@@ -7,6 +7,7 @@ from affiliations.AffiliationClassifier import AffiliationClassifier
 from datetime import datetime
 from utils.functional import implies
 import numpy as np
+from os.path import basename
 
 
 logger = logging.getLogger(__name__)
@@ -41,10 +42,10 @@ class Paper:
     def getContent(self):
         sections = self.getSections()
         content =  ' '.join(section['content'] for section in sections)
-        assert(len(content) > 0) 
+        assert(len(content) > 0), f"Found no content within sections."
         return content
     
-    def getSections(self) -> List[dict]:
+    def getSections(self, heading_prefix = '##') -> List[dict]:
         if (self.sections is not None):
             return self.sections
         
@@ -55,7 +56,7 @@ class Paper:
                                 )
         content = self.normalizeNumericalCitations(file_content)
         
-        sections = [{'content': '## ' + section} for section in filter(None, re.split("\n##(?=[^#])", content))]
+        sections = [{'content': f'{heading_prefix} ' + section} for section in filter(None, re.split(f"\n{heading_prefix}(?=[^#])", content))]
         
         for section in sections:
             section['labels'] = self.labelSection(section['content'])
@@ -148,11 +149,11 @@ class Paper:
     
     def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
         if (as_dict):
-            return [text_ref | {'paper': self.title} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
+            return [text_ref | {'paperId': basename(self.path)} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
         else:
             return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
     
-    def findNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
+    def getNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)
         return self.name_and_affiliation
     
@@ -169,8 +170,9 @@ class Paper:
                             'method': self.getGenericHeadingCheckerFunction('methodology', 'method', 'approach', 'experiment'),
                             'abstract': self.getGenericHeadingCheckerFunction('abstract'),
                             'appendix': self.getGenericHeadingCheckerFunction('appendix'),
-                            'background': self.getGenericHeadingCheckerFunction('introduction', 'related work', 'background'),
+                            'background': self.getGenericHeadingCheckerFunction('related work', 'background'),
                             'conclusion': self.getGenericHeadingCheckerFunction('conclusion', 'discussion'),
+                            'introduction': self.getGenericHeadingCheckerFunction('introduction'),
                             'results': self.getGenericHeadingCheckerFunction('results')
         }
         

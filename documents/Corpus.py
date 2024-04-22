@@ -72,8 +72,7 @@ class Corpus:
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
  
         return good_papers, bad_papers
-    
-        
+     
     def saveClassificationByTitle(self, title: str, key: str, resultsfile: str):
         logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}...).")
         
@@ -81,12 +80,12 @@ class Corpus:
         df = pd.DataFrame.from_dict(textRefByKey)
         
         if len(df) > 0:
-            df['classification_ranking'] = df.groupby(['FM_key', 'paper'])['classification_order'].rank(method='min')
+            df['classification_ranking'] = df.groupby(['FM_key', 'paperId'])['classification_order'].rank(method='min')
             classification_counts = (df[df['classification_ranking'] == 1]
-                                                    .groupby(['FM_key', 'classification'])['paper']
+                                                    .groupby(['FM_key', 'classification'])['paperId']
                                                     .nunique()
                                                     .reset_index()
-                                                    .rename(columns={'paper':'count'})
+                                                    .rename(columns={'paperId':'count'})
                                                     .pivot(index='FM_key', columns='classification', values='count')
                                                     .fillna(0)
                                                     .rename_axis(None, axis = 1)
@@ -120,11 +119,11 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def setAllAffiliations(self, classifier: AffiliationClassifier, resultsfile: str = None):
+    def getAllAffiliations(self, classifier: AffiliationClassifier, resultsfile: str = None):
         f = open(resultsfile, 'a') if resultsfile else None
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
-            results = paper.findNamesAndAffiliations(classifier=classifier)
+            results = paper.getNamesAndAffiliations(classifier=classifier)
             
             if f:
                 results_string = json.dumps({paper.path: results}) + '\n'

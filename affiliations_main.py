@@ -50,7 +50,7 @@ def main():
                         filter_path = args.filter_file,
                         lazy = not args.eagerstorage,
                         confirm_paper_ref_sections=False)
-    corpus.setAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
+    corpus.getAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
 
 
 
