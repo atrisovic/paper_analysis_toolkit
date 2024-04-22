@@ -61,7 +61,10 @@ class Paper:
         for section in sections:
             section['labels'] = self.labelSection(section['content'])
             
-        sections[0]['labels'].add('first')
+        if sections:
+            sections[0]['labels'].add('first')
+        else:
+            logger.debug(f"No sections found for file at {self.path}. Content size is {len(content)}.")
         
         if (not self.lazy):
             self.sections = sections
