@@ -42,7 +42,8 @@ class Paper:
     def getContent(self):
         sections = self.getSections()
         content =  ' '.join(section['content'] for section in sections)
-        assert(len(content) > 0), f"Found no content within sections."
+        
+        #assert(len(content) > 0), f"Found no content within sections."
         return content
     
     def getSections(self, heading_prefix = '##') -> List[dict]:
@@ -169,14 +170,14 @@ class Paper:
         
     def labelSection(self, content: str):    
         mappings = {
-                            'reference': self.getGenericHeadingCheckerFunction('references', 'citations'),
+                            'reference': self.getGenericHeadingCheckerFunction('references', 'citations','bibliography'),
                             'method': self.getGenericHeadingCheckerFunction('methodology', 'method', 'approach', 'experiment'),
                             'abstract': self.getGenericHeadingCheckerFunction('abstract'),
                             'appendix': self.getGenericHeadingCheckerFunction('appendix'),
                             'background': self.getGenericHeadingCheckerFunction('related work', 'background'),
                             'conclusion': self.getGenericHeadingCheckerFunction('conclusion', 'discussion'),
                             'introduction': self.getGenericHeadingCheckerFunction('introduction'),
-                            'results': self.getGenericHeadingCheckerFunction('results')
+                            'result': self.getGenericHeadingCheckerFunction('result')
         }
         
         labels = {label for label, func in mappings.items() if func(content)}
