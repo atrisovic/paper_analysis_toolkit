@@ -1,5 +1,5 @@
 from citations.TextualReference import TextualReference
-from citations.CitationClassifier import CitationClassifier
+from citations.CitationClassifier import MultiCiteClassifier
 from utils.functional import implies
 
 from typing import List, Dict, Set
@@ -76,7 +76,7 @@ class Reference:
         
         return self.textualReferences
 
-    def classifyAllSentences(self, classifier: CitationClassifier):
+    def classifyAllSentences(self, classifier: MultiCiteClassifier):
         for textualReference in self.textualReferences:
             textualReference.classify(classifier=classifier)
             

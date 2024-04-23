@@ -7,28 +7,19 @@ class TextualReference:
         self.labels: Set[str] = labels
         
         self.classification: str = None
+        self.classification_order: int = None
 
         
     def classify(self, classifier: CitationClassifier):
-        model_classification = classifier.classify_text(self.sentence)
-        
-        is_uses = model_classification in ('uses','extends')
-        
-        background_label = 'background' in self.labels
-
-        if (is_uses and background_label):
-            self.classification = 'usetobackground'
-        else:
-            self.classification = model_classification
+        self.classification = classifier.classify_text(self.sentence, self.labels)
+        self.classification_order = classifier.getClassificationRanking(self.classification)
             
     
     def as_dict(self):
-        order_class_values = ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background', 'usetobackground']
-        classification_rankings = {val: idx for idx, val in enumerate(order_class_values)}
         return {
                 'sentence': self.sentence,
                 'classification': self.classification,
-                'classification_order': classification_rankings[self.classification],
+                'classification_order': self.classification_order,
                 'labels': self.labels
                 }
 

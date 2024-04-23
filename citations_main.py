@@ -1,4 +1,4 @@
-from citations.CitationClassifier import CitationClassifier
+from citations.CitationClassifier import MultiCiteClassifier
 from documents.Corpus import Corpus
 import json, pickle
 import warnings, logging
@@ -28,7 +28,7 @@ def main():
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)    
     
     
-    classifier = CitationClassifier(CITATION_MODEL_PATH)
+    classifier = MultiCiteClassifier(CITATION_MODEL_PATH)
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
                         cluster_info = (args.index, args.workers), 

@@ -174,7 +174,7 @@ class Paper:
                             'method': self.getGenericHeadingCheckerFunction('methodology', 'method', 'approach', 'experiment'),
                             'abstract': self.getGenericHeadingCheckerFunction('abstract'),
                             'appendix': self.getGenericHeadingCheckerFunction('appendix'),
-                            'background': self.getGenericHeadingCheckerFunction('related work', 'background'),
+                            'background': self.getGenericHeadingCheckerFunction('related work', 'background', 'prior', 'conceptual', 'overview', 'review'),
                             'conclusion': self.getGenericHeadingCheckerFunction('conclusion', 'discussion'),
                             'introduction': self.getGenericHeadingCheckerFunction('introduction'),
                             'result': self.getGenericHeadingCheckerFunction('result')

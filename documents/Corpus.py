@@ -1,5 +1,5 @@
 from documents.Paper import Paper, ReferenceSectionCountException
-from citations.CitationClassifier import CitationClassifier
+from citations.CitationClassifier import MultiCiteClassifier
 from citations.Reference import Reference
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from utils.functional import clusterOrLimitList
@@ -96,13 +96,13 @@ class Corpus:
         else:
             logger.info(f"No textual references found for {key}. Nothing written to results file.")
 
-    def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: CitationClassifier):
+    def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: MultiCiteClassifier):
         logger.info(f"Finding references for (key = {key}, title = {title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
         for paper in self.papers:
             paper.getReferenceFromTitle(title, key, classifier = classifier)
         logger.info(f"References successfully saved to underlying paper objects.")
             
-    def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: CitationClassifier = None, resultsfile = None):
+    def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: MultiCiteClassifier = None, resultsfile = None):
         titles = clusterOrLimitList(titles, self.cluster_info, self.foundation_model_limit)
         keys = clusterOrLimitList(keys, self.cluster_info, self.foundation_model_limit)
 
