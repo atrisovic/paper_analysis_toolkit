@@ -1,6 +1,7 @@
 from documents.Paper import Paper, ReferenceSectionCountException
-from citations.CitationClassifier import MultiCiteClassifier
+from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
+from citations.Agglomerator import RankedClassificationCounts, Agglomerator
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from utils.functional import clusterOrLimitList
 
@@ -12,6 +13,7 @@ from os.path import join, basename
 import pandas as pd, logging, json
 
 logger = logging.getLogger(__name__)
+
 
 
 
@@ -73,45 +75,54 @@ class Corpus:
  
         return good_papers, bad_papers
      
-    def saveClassificationByTitle(self, title: str, key: str, resultsfile: str):
-        logger.info(f"Saving group classification metrics to {resultsfile} for (key={key}, title={title[:30]}...).")
-        
+    def agglomerateResultsByTitle(self, title: str, key: str, agglomerator: Agglomerator = None):
         textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('FM_key') == key]
         df = pd.DataFrame.from_dict(textRefByKey)
         
-        if len(df) > 0:
-            df['classification_ranking'] = df.groupby(['FM_key', 'paperId'])['classification_order'].rank(method='min')
-            classification_counts = (df[df['classification_ranking'] == 1]
-                                                    .groupby(['FM_key', 'classification'])['paperId']
-                                                    .nunique()
-                                                    .reset_index()
-                                                    .rename(columns={'paperId':'count'})
-                                                    .pivot(index='FM_key', columns='classification', values='count')
-                                                    .fillna(0)
-                                                    .rename_axis(None, axis = 1)
-                                                )
-            with open(resultsfile, 'a+') as f:
-                f.write(classification_counts.to_json(orient = 'index') + "\n")
-            logger.info(f"Successfully computed and saved results.")
-        else:
-            logger.info(f"No textual references found for {key}. Nothing written to results file.")
+        if (len(df) > 0):
+            agglomerator = agglomerator or RankedClassificationCounts()            
+            return agglomerator.applyQuery(df)
 
-    def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: MultiCiteClassifier):
+        return None
+        
+                
+
+    def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: CitationClassifier):
         logger.info(f"Finding references for (key = {key}, title = {title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
         for paper in self.papers:
             paper.getReferenceFromTitle(title, key, classifier = classifier)
         logger.info(f"References successfully saved to underlying paper objects.")
             
-    def findAllPaperRefsAllTitles(self, titles: List[str], keys = List[str], classifier: MultiCiteClassifier = None, resultsfile = None):
+    def findAllPaperRefsAllTitles(self, titles: List[str], 
+                                        keys = List[str], 
+                                        classifier: CitationClassifier = None, 
+                                        resultsfile = None,
+                                        agglomerator: Agglomerator = None):
+        
         titles = clusterOrLimitList(titles, self.cluster_info, self.foundation_model_limit)
         keys = clusterOrLimitList(keys, self.cluster_info, self.foundation_model_limit)
+        
+
+        f = open(resultsfile, 'a+') if resultsfile else None
 
         logger.info(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
         for title, key in tqdm(list(zip(titles, keys))):
             self.findAllPaperReferencesByTitle(title = title, key = key, classifier=classifier)
-            if resultsfile and classifier:
-                self.saveClassificationByTitle(title, key, resultsfile)
             
+            results = self.agglomerateResultsByTitle(title, key, agglomerator = agglomerator) if f and classifier else None
+            if results is not None:
+                f.write(results.to_json(orient = 'index') + "\n")
+                f.flush()
+                logger.info(f"Saved all results for title = {title[:30]}... and key = {key}.")
+            else:
+                logger.info(f"No textual references found for {key}. Nothing written to results file.")
+
+        resultsfile.close()
+                
+    def agglomerateAllTextualReferences(self, agglomerator: Agglomerator):
+        df = pd.DataFrame.from_dict(self.getAllTextualReferences(as_dict = True))
+        classification_counts = agglomerator.applyQuery(df)
+        return classification_counts
             
     def getAllReferences(self) -> List[Tuple[Paper, Reference]]:
         return [reference for paper in self.papers for ref_name, reference in paper.references.items()]

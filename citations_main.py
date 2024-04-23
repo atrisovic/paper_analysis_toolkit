@@ -1,4 +1,5 @@
 from citations.CitationClassifier import MultiCiteClassifier
+from citations.Agglomerator import RankedClassificationCounts
 from documents.Corpus import Corpus
 import json, pickle
 import warnings, logging
@@ -41,7 +42,11 @@ def main():
         keys, titles = list(zip(*[(key, data['title'].replace('\\infty', '∞')) for key, data in foundational_models_json.items()]))
         keys, titles = list(keys), list(titles)
 
-    corpus.findAllPaperRefsAllTitles(titles = titles, keys = keys, classifier = classifier, resultsfile = resultsfile)
+    corpus.findAllPaperRefsAllTitles(titles = titles, 
+                                     keys = keys, 
+                                     classifier = classifier, 
+                                     resultsfile = resultsfile,
+                                     agglomerator=RankedClassificationCounts())
 
     with open(f'pickle/corpus{args.index if args.workers > 1 else ""}.pkl', 'wb') as f:
         pickle.dump(corpus, f)
