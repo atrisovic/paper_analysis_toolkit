@@ -117,7 +117,8 @@ class Corpus:
             else:
                 logger.info(f"No textual references found for {key}. Nothing written to results file.")
 
-        resultsfile.close()
+        if f:
+            f.close()
                 
     def agglomerateAllTextualReferences(self, agglomerator: Agglomerator):
         df = pd.DataFrame.from_dict(self.getAllTextualReferences(as_dict = True))
