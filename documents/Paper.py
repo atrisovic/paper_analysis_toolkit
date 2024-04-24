@@ -24,7 +24,7 @@ class Paper:
         self.id: str = basename(self.path).split('.')[0]
         self.lazy: bool = lazy
 
-        self.year: int = year
+        self.year: str = str(year)
         self.sections: List[str] = None
         self.sentences: Dict[str, List[str]] = None
         self.references: Dict[str, Reference]= {}
