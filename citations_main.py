@@ -48,7 +48,7 @@ def main():
                                      resultsfile = resultsfile,
                                      agglomerator=RankedClassificationCountsYearly())
 
-    with open(f'pickle/corpus{args.index if args.workers > 1 else ""}.pkl', 'wb') as f:
+    with open(f'pickle/corpus{args.index if args.workers > 1 else ""}_{right_now}.pkl', 'wb') as f:
         pickle.dump(corpus, f)
         
 if __name__ == '__main__':
