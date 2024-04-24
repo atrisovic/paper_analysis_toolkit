@@ -6,7 +6,7 @@ import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from citations.FoundationModel import FoundationModel
 from datetime import datetime
-from utils.functional import implies
+from utils.functional import implies, stemmed_basename
 import numpy as np
 from os.path import basename
 
@@ -21,7 +21,7 @@ class ReferenceSectionCountException(Exception):
 class Paper:
     def __init__(self, path: str, lazy = False, confirm_reference_section = True, year: int = None):
         self.path: str = path
-        self.id: str = basename(self.path).split('.')[0]
+        self.id: str = stemmed_basename(self.path)
         self.lazy: bool = lazy
 
         self.year: str = str(year)

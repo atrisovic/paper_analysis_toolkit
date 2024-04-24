@@ -4,7 +4,7 @@ from citations.Reference import Reference
 from citations.Agglomerator import RankedClassificationCounts, Agglomerator
 from citations.FoundationModel import FoundationModel
 from affiliations.AffiliationClassifier import AffiliationClassifier
-from utils.functional import clusterOrLimitList
+from utils.functional import clusterOrLimitList, stemmed_basename
 
 from typing import List, Tuple, Dict
 from tqdm import tqdm
@@ -37,7 +37,7 @@ class Corpus:
         self.filter_path: str = filter_path
         self.lazy: bool = lazy
         self.confirm_paper_ref_sections: bool = confirm_paper_ref_sections
-        self.paper_years = paper_years
+        self.paper_years = paper_years or {}
         
         self.setPapersLists()
 
@@ -61,15 +61,20 @@ class Corpus:
         all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.paper_limit)
         
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
+
+        if (self.paper_years):
+            missing_ids = set(map(stemmed_basename, all_file_paths)) - set(self.paper_years.keys())
+            #assert(not missing_ids), f"Could not find years for {len(missing_ids)} ids. E.g.: {list(missing_ids)[0]}"
         
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
-            id = basename(path).split('.')[0]
+            id = stemmed_basename(path)
+            year = self.paper_years.get(id)
             try:
                 good_papers.append(Paper(path, 
                                          lazy = self.lazy, 
                                          confirm_reference_section=self.confirm_paper_ref_sections,
-                                         year = self.paper_years.get(id))
+                                         year = year)
                                    )
             except ReferenceSectionCountException as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")

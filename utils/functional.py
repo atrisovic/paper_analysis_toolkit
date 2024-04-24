@@ -2,10 +2,14 @@ import pandas as pd
 from typing import Tuple
 from math import ceil
 import random, json
+from os.path import basename
 
 df = pd.read_csv('./data/sub_sample_dataset2.csv')
 id_to_title = {k:v for k, v in zip(df['citation.paperId'].to_list(), df['citation.title'].to_list())} | {k:v for k, v in zip(df['model.paperId'].to_list(), df['model.title'].to_list())}
 
+
+def stemmed_basename(path: str):
+    return basename(path).split('.')[0]
 
 def implies(a: bool, b: bool) -> bool:
     return not(a) or b
