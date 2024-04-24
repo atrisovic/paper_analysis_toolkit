@@ -1,6 +1,6 @@
 from citations.Reference import Reference
 import regex as re
-from typing import List, Dict, Optional
+from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
@@ -187,7 +187,7 @@ class Paper:
             raise ReferenceSectionCountException(message = f"Found {len(ref_sections)} sections labeled 'reference'.") 
         
         
-    def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
+    def getAllTextualReferences(self, as_dict = False) -> Union[List[dict], List[Reference]]:
         if (as_dict):
             return [text_ref | {'paperId': self.id, 'paperYear': self.year} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
         else:

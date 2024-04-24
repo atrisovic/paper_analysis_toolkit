@@ -64,7 +64,7 @@ class Corpus:
 
         if (self.paper_years):
             missing_ids = set(map(stemmed_basename, all_file_paths)) - set(self.paper_years.keys())
-            #assert(not missing_ids), f"Could not find years for {len(missing_ids)} ids. E.g.: {list(missing_ids)[0]}"
+            assert(not missing_ids), f"Could not find years for {len(missing_ids)} ids. E.g.: {list(missing_ids)[0]}"
         
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
