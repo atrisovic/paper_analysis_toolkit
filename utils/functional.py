@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import Tuple
 from math import ceil
-import random
+import random, json
 
 df = pd.read_csv('./data/sub_sample_dataset2.csv')
 id_to_title = {k:v for k, v in zip(df['citation.paperId'].to_list(), df['citation.title'].to_list())} | {k:v for k, v in zip(df['model.paperId'].to_list(), df['model.title'].to_list())}
@@ -31,3 +31,12 @@ def clusterOrLimitList(L: list, cluster_info: Tuple[int, int] = None, limit: int
 
     return L
 
+
+def extract_paper_metadata(path: str):
+    paper_years = {}
+    with open(path, 'r') as f:
+        for line in f.readlines():
+            json_line = json.loads(line)
+            if (not json_line.get('error')):
+                paper_years[json_line['paperId']] = json_line['year']
+    return paper_years

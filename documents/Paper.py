@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 from nltk.tokenize import sent_tokenize
 import logging
 from affiliations.AffiliationClassifier import AffiliationClassifier
+from citations.FoundationModel import FoundationModel
 from datetime import datetime
 from utils.functional import implies
 import numpy as np
@@ -18,10 +19,12 @@ class ReferenceSectionCountException(Exception):
         super().__init__(self.message)
 
 class Paper:
-    def __init__(self, path: str, lazy = False, confirm_reference_section = True):
+    def __init__(self, path: str, lazy = False, confirm_reference_section = True, year: int = None):
         self.path: str = path
+        self.id: str = basename(self.path).split('.')[0]
         self.lazy: bool = lazy
 
+        self.year: int = year
         self.sections: List[str] = None
         self.sentences: Dict[str, List[str]] = None
         self.references: Dict[str, Reference]= {}
@@ -54,6 +57,7 @@ class Paper:
             file_content = ( f.read()
                                 .lower()
                                 .replace('et al.', 'et al')   #sentence tokenizer mistakes the period for end of sentence
+                                .replace('\\infty', '∞')
                                 )
         content = self.normalizeNumericalCitations(file_content)
         
@@ -132,13 +136,13 @@ class Paper:
         
         return content
     
-    def getReferenceFromTitle(self, title, key, classifier = None) -> Reference:        
+    def getReferenceFromTitle(self, model: FoundationModel, classifier = None) -> Reference:        
         content = self.getContent()
         
         if (content is None):
             logger.debug(f'No content found for page {self.path}, pulling the document again.')
 
-        reference = Reference(title = title, key = key, paper_path = self.path)
+        reference = Reference(model = model, paperId = self.id)
         reference.checkMissingPageFailure(content = content)
         
         reference.getCitationFromContent(content = self.getSectionsByLabel(label = 'reference'))
@@ -147,15 +151,9 @@ class Paper:
         if classifier:
             reference.classifyAllSentences(classifier = classifier)
 
-        self.references[key] = reference
+        self.references[model.key] = reference
         
         return reference
-    
-    def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
-        if (as_dict):
-            return [text_ref | {'paperId': basename(self.path)} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
-        else:
-            return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
     
     def getNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)
@@ -187,3 +185,10 @@ class Paper:
         ref_sections = self.getSectionsByLabel(label = 'reference', join = False)
         if (len(ref_sections) != 1):
             raise ReferenceSectionCountException(message = f"Found {len(ref_sections)} sections labeled 'reference'.") 
+        
+        
+    def getAllTextualReferences(self, as_dict = False) -> List[dict] | List[Reference]:
+        if (as_dict):
+            return [text_ref | {'paperId': self.id, 'paperYear': self.year} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
+        else:
+            return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]

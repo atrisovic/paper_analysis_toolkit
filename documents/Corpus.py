@@ -2,10 +2,11 @@ from documents.Paper import Paper, ReferenceSectionCountException
 from citations.CitationClassifier import CitationClassifier
 from citations.Reference import Reference
 from citations.Agglomerator import RankedClassificationCounts, Agglomerator
+from citations.FoundationModel import FoundationModel
 from affiliations.AffiliationClassifier import AffiliationClassifier
 from utils.functional import clusterOrLimitList
 
-from typing import List, Tuple
+from typing import List, Tuple, Dict
 from tqdm import tqdm
 from os import walk
 from os.path import join, basename
@@ -25,7 +26,8 @@ class Corpus:
                         cluster_info: Tuple[int, int] = None, 
                         filter_path: str = None,
                         lazy: bool = False,
-                        confirm_paper_ref_sections: bool = True):
+                        confirm_paper_ref_sections: bool = True,
+                        paper_years: Dict[str, int] = None):
         
         self.paper_limit: int = paper_limit
         self.foundation_model_limit: int = foundation_model_limit
@@ -35,6 +37,7 @@ class Corpus:
         self.filter_path: str = filter_path
         self.lazy: bool = lazy
         self.confirm_paper_ref_sections: bool = confirm_paper_ref_sections
+        self.paper_years = paper_years
         
         self.setPapersLists()
 
@@ -61,8 +64,13 @@ class Corpus:
         
         good_papers, bad_papers = [], []
         for path in tqdm(all_file_paths):
+            id = basename(path).split('.')[0]
             try:
-                good_papers.append(Paper(path, lazy = self.lazy, confirm_reference_section=self.confirm_paper_ref_sections))
+                good_papers.append(Paper(path, 
+                                         lazy = self.lazy, 
+                                         confirm_reference_section=self.confirm_paper_ref_sections,
+                                         year = self.paper_years.get(id))
+                                   )
             except ReferenceSectionCountException as e:
                 logger.debug(f"Exception occured creating Paper object from {path} (ignored, see Corpus.bad_papers) {e}")
                 bad_papers.append((path, e))
@@ -75,8 +83,8 @@ class Corpus:
  
         return good_papers, bad_papers
      
-    def agglomerateResultsByTitle(self, title: str, key: str, agglomerator: Agglomerator = None):
-        textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('FM_key') == key]
+    def agglomerateResultsByTitle(self, id: str, agglomerator: Agglomerator = None):
+        textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('modelId') == id]
         df = pd.DataFrame.from_dict(textRefByKey)
         
         if (len(df) > 0):
@@ -87,35 +95,32 @@ class Corpus:
         
                 
 
-    def findAllPaperReferencesByTitle(self, title: str, key: str, classifier: CitationClassifier):
-        logger.info(f"Finding references for (key = {key}, title = {title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
+    def findAllPaperReferencesByTitle(self, model: FoundationModel, classifier: CitationClassifier):
+        logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
         for paper in self.papers:
-            paper.getReferenceFromTitle(title, key, classifier = classifier)
+            paper.getReferenceFromTitle(model = model, classifier = classifier)
         logger.info(f"References successfully saved to underlying paper objects.")
             
-    def findAllPaperRefsAllTitles(self, titles: List[str], 
-                                        keys = List[str], 
+    def findAllPaperRefsAllTitles(self, models = List[FoundationModel],
                                         classifier: CitationClassifier = None, 
                                         resultsfile = None,
                                         agglomerator: Agglomerator = None):
         
-        titles = clusterOrLimitList(titles, self.cluster_info, self.foundation_model_limit)
-        keys = clusterOrLimitList(keys, self.cluster_info, self.foundation_model_limit)
-        
+        models = clusterOrLimitList(models, self.cluster_info, self.foundation_model_limit)        
 
         f = open(resultsfile, 'a+') if resultsfile else None
 
-        logger.info(f"Finding references to {len(titles)} titles in corpus {'and' if classifier else 'without'} classifying sentences.")
-        for title, key in tqdm(list(zip(titles, keys))):
-            self.findAllPaperReferencesByTitle(title = title, key = key, classifier=classifier)
+        logger.info(f"Finding references to {len(models)} foundation models in corpus {'and' if classifier else 'without'} classifying sentences.")
+        for model in tqdm(models):
+            self.findAllPaperReferencesByTitle(model = model, classifier=classifier)
             
-            results = self.agglomerateResultsByTitle(title, key, agglomerator = agglomerator) if f and classifier else None
+            results = self.agglomerateResultsByTitle(model.id, agglomerator = agglomerator) if f and classifier else None
             if results is not None:
                 f.write(results.to_json(orient = 'index') + "\n")
                 f.flush()
-                logger.info(f"Saved all results for title = {title[:30]}... and key = {key}.")
+                logger.info(f"Saved all results for title = {model.title[:30]}... and key = {model.key}.")
             else:
-                logger.info(f"No textual references found for {key}. Nothing written to results file.")
+                logger.info(f"No textual references found for {model.key}. Nothing written to results file.")
 
         if f:
             f.close()

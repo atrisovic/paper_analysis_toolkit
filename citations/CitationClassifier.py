@@ -88,7 +88,8 @@ class LocationBasedClassifier(CitationClassifier):
             return 'background'
         
         return 'NONE'
-    
+
+
 class GranularCitationClassier(CitationClassifier):
     def __init__(self):
         pass

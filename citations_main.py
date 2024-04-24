@@ -1,11 +1,13 @@
 from citations.CitationClassifier import MultiCiteClassifier
-from citations.Agglomerator import RankedClassificationCounts
+from citations.Agglomerator import RankedClassificationCountsYearly
+from citations.FoundationModel import FoundationModel
 from documents.Corpus import Corpus
 import json, pickle
 import warnings, logging
 from datetime import datetime
 import argparse
-from config import FOUNDATION_MODELS_PATH, MARKDOWN_FILES_PATH, CITATION_MODEL_PATH
+from config import FOUNDATION_MODELS_PATH, MARKDOWN_FILES_PATH, CITATION_MODEL_PATH, OPEN_ACCESS_PAPER_XREF
+from utils.functional import extract_paper_metadata
 
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
@@ -26,32 +28,28 @@ def main():
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/citations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
     resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
-    logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)    
-    
+    logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
     classifier = MultiCiteClassifier(CITATION_MODEL_PATH)
+    
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
                         cluster_info = (args.index, args.workers), 
                         foundation_model_limit = args.limit, 
                         filter_path=args.filter_file, 
-                        lazy = args.lazystorage)
+                        lazy = args.lazystorage,
+                        paper_years=extract_paper_metadata(OPEN_ACCESS_PAPER_XREF)
+                        )
 
-    with open(FOUNDATION_MODELS_PATH, 'r') as f:
-        foundational_models_json = json.load(f)
-        keys, titles = list(zip(*[(key, data['title'].replace('\\infty', '∞')) for key, data in foundational_models_json.items()]))
-        keys, titles = list(keys), list(titles)
-
-    corpus.findAllPaperRefsAllTitles(titles = titles, 
-                                     keys = keys, 
+    models = FoundationModel.modelsFromJSON(FOUNDATION_MODELS_PATH)
+      
+    corpus.findAllPaperRefsAllTitles(models = models,
                                      classifier = classifier, 
                                      resultsfile = resultsfile,
-                                     agglomerator=RankedClassificationCounts())
+                                     agglomerator=RankedClassificationCountsYearly())
 
     with open(f'pickle/corpus{args.index if args.workers > 1 else ""}.pkl', 'wb') as f:
         pickle.dump(corpus, f)
-        
-        
         
 if __name__ == '__main__':
     main()
