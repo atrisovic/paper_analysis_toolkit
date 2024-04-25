@@ -8,6 +8,7 @@ from datetime import datetime
 import argparse
 from config import FOUNDATION_MODELS_PATH, MARKDOWN_FILES_PATH, CITATION_MODEL_PATH, OPEN_ACCESS_PAPER_XREF
 from utils.functional import extract_paper_metadata
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
@@ -49,7 +50,8 @@ def main():
                                      agglomerator=RankedClassificationCountsYearly())
 
     with open(f'pickle/corpus{args.index if args.workers > 1 else ""}_{right_now}.pkl', 'wb') as f:
-        pickle.dump(corpus, f)
+        df = pd.DataFrame(corpus.getAllTextualReferences(as_dict = True))
+        pickle.dump(df, f)
         
 if __name__ == '__main__':
     main()
