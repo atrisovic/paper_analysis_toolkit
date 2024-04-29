@@ -1,5 +1,5 @@
 from citations.CitationClassifier import MultiCiteClassifier
-from citations.Agglomerator import RankedClassificationCountsYearly
+from citations.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
 from citations.FoundationModel import FoundationModel
 from documents.Corpus import Corpus
 import json, pickle
@@ -43,11 +43,12 @@ def main():
                         )
 
     models = FoundationModel.modelsFromJSON(FOUNDATION_MODELS_PATH)
+    
+    agglomerator = RankedClassificationCountsYearly(resultsfile=resultsfile)
       
-    corpus.findAllPaperRefsAllTitles(models = models,
+    corpus.findAllReferencesAllModels(models = models,
                                      classifier = classifier, 
-                                     resultsfile = resultsfile,
-                                     agglomerator=RankedClassificationCountsYearly())
+                                     agglomerator=agglomerator)
 
     with open(f'pickle/corpus{args.index if args.workers > 1 else ""}_{right_now}.pkl', 'wb') as f:
         df = pd.DataFrame(corpus.getAllTextualReferences(as_dict = True))
