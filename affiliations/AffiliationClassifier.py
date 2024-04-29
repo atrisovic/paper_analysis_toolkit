@@ -5,16 +5,15 @@ from os.path import join
 from typing import List
 from tqdm import tqdm
 
+
 class AffiliationClassifier:
     def __init__(self, model, tokenizer, device):
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
 
-
-
     def getOutputFormat(self):
-      return """
+        return """
 {
     "contributors": [
         {
@@ -30,18 +29,18 @@ class AffiliationClassifier:
     "countries": ["country1", "country2"]
 }
                 """
-                
+
     def getExamples(self):
-        example_text1 = '''# on the helpfulness of large language models
+        example_text1 = """# on the helpfulness of large language models
 
 bill ackendorf, Jolene baylor
 
 yuxin shu, khalid saifullah
 
-alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bob dilan
+alex fogelson \({}^{\dagger}\), ana trisovic, neil thompson\({}^{\ddagger}\), bob dilan
 
-\({}^{\ddagger}\) new york university, massachusetts institute of technology'''
-        example_response1 = '''
+\({}^{\ddagger}\) new york university, massachusetts institute of technology"""
+        example_response1 = """
 {
     "contributors": [
         {"first": "Bill", "last": "Ackendorf", "gender": "male"},
@@ -49,97 +48,99 @@ alex fogelson \({}^{\dagger}\), ana trivosic, neil thompson\({}^{\ddagger}\), bo
         {"first": "Yuxin", "last": "Shu", "gender": "female"},
         {"first": "Khalid", "last": "Saifullah", "gender": "male"},
         {"first": "Alex", "last": "Fogelson", "gender": "male"},
-        {"first": "Ana", "last": "Trivosic", "gender": "female"},
+        {"first": "Ana", "last": "Trisovic", "gender": "female"},
         {"first": "Neil", "last": "Thompson", "gender": "male"}],
     "institutions": [
         {"name": "New York University", "type": "Academic"},
         {"name": "Massachusetts Institute of Technology", "type": "Academic"}
         ],
     "countries": ["United States"]
-}'''
-        
+}"""
+
         return [(example_text1, example_response1)]
-                
+
     def stripJSONResult(self, response_str: str):
-        starting_index = response_str.rfind('[/INST]') + len('[/INST]')
-        end_index = response_str.rfind('</s>')
-        return response_str[starting_index: end_index].strip()
-    
+        starting_index = response_str.rfind("[/INST]") + len("[/INST]")
+        end_index = response_str.rfind("</s>")
+        return response_str[starting_index:end_index].strip()
+
     def formatPrompt(self, text: str):
-        return f'''Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
-                    The output should match exactly the JSON format given. The text is as follows: {text}'''
+        return f"""Please read this text, and return the following information in the JSON format provided: {self.getOutputFormat()}\
+                    The output should match exactly the JSON format given. The text is as follows: {text}"""
 
     def textToPrompt(self, text: str) -> TensorType:
 
         messages = []
         for example_text, example_response in self.getExamples():
-            messages.append({"role": "user", "content": self.formatPrompt(example_text)})
+            messages.append(
+                {"role": "user", "content": self.formatPrompt(example_text)}
+            )
             messages.append({"role": "assistant", "content": example_response})
 
-        messages.append(
-            {"role": "user", "content": self.formatPrompt(text)}
+        messages.append({"role": "user", "content": self.formatPrompt(text)})
+
+        encoded_prompt = self.tokenizer.apply_chat_template(
+            messages, return_tensors="pt"
         )
-        
-        encoded_prompt = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
 
         return encoded_prompt
 
-
     def classifyFromText(self, text: str) -> dict:
-        #format input
+        # format input
         input = self.textToPrompt(text).to(self.device)
-        
-        #generate response
-        generated_ids = self.model.generate(input,
-                                              max_new_tokens=1000,
-                                              do_sample=True,
-                                              pad_token_id = self.tokenizer.eos_token_id,
-                                              temperature = .25)
-        
+
+        # generate response
+        generated_ids = self.model.generate(
+            input,
+            max_new_tokens=1000,
+            do_sample=True,
+            pad_token_id=self.tokenizer.eos_token_id,
+            temperature=0.25,
+        )
+
         raw_output: str = self.tokenizer.batch_decode(generated_ids)[0]
-        #strip as json
+        # strip as json
         json_string_extracted: str = self.stripJSONResult(raw_output)
-        
+
         return json_string_extracted
-    
-    
-    def classifyFromTextEnsureJSON(self, text: str, tolerance = 5) -> dict:            
+
+    def classifyFromTextEnsureJSON(self, text: str, tolerance=5) -> dict:
         counter = 0
         json_result = None
-        while (counter < tolerance and not json_result):
+        while counter < tolerance and not json_result:
             counter += 1
             json_string_results = self.classifyFromText(text)
             try:
                 json_result = json.loads(json_string_results)
             except:
                 pass
-        
+
         try:
-            structured_json = self.stripJSONStructure(json_result) if json_result else None
+            structured_json = (
+                self.stripJSONStructure(json_result) if json_result else None
+            )
         except:
             structured_json = None
-            
+
         return structured_json
-    
-    
+
     def stripJSONStructure(self, json_object: dict) -> dict:
         new_dict = dict()
         new_dict["countries"] = json_object.get("countries")
 
-
-        new_dict["institutions"] = [] 
+        new_dict["institutions"] = []
         new_dict["contributors"] = []
-        
+
         for person in json_object.get("contributors"):
             new_person = {}
-            for attribute in ['first', 'last', 'gender']:
+            for attribute in ["first", "last", "gender"]:
                 new_person[attribute] = person.get(attribute)
             new_dict["contributors"].append(new_person)
-        
+
         for institution in json_object.get("institutions"):
             new_institution = {}
-            for attribute in ['name', 'type']:
+            for attribute in ["name", "type"]:
                 new_institution[attribute] = institution.get(attribute)
-            new_dict['institutions'].append(new_institution)
-        
+            new_dict["institutions"].append(new_institution)
+
         return new_dict
