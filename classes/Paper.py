@@ -7,6 +7,7 @@ from classes.AffiliationsPipeline import AffiliationsPipeline
 from .FoundationModel import FoundationModel
 from datetime import datetime
 from utils.functional import implies, stemmed_basename
+from typing import List, Union
 import numpy as np
 from os.path import basename
 
@@ -154,6 +155,15 @@ class Paper:
         self.references[model.key] = reference
         
         return reference
+    
+    def getAllReferences(self):
+        return [item for _, item in self.references.items()]
+    
+    def getAllTextualReferences(self, as_dict = False) -> Union[List[dict], List[Reference]]:
+        if (as_dict):
+            return [text_ref | {'paperId': basename(self.path)} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
+        else:
+            return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
     
     def getNamesAndAffiliations(self, classifier: AffiliationsPipeline) -> dict:
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)

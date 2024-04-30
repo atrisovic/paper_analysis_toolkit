@@ -7,3 +7,8 @@
 .venv/*
 *.jsonl
 saved_models/*
+*.sh
+*.zip
+nltk_data/*
+models--mistralai--Mistral-7B-Instruct-v0.2/*
+config.py
