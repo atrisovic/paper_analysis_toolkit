@@ -1,10 +1,10 @@
-from citations.Reference import Reference
+from .Reference import Reference
 import regex as re
 from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
-from affiliations.AffiliationClassifier import AffiliationClassifier
-from citations.FoundationModel import FoundationModel
+from classes.AffiliationsPipeline import AffiliationsPipeline
+from .FoundationModel import FoundationModel
 from datetime import datetime
 from utils.functional import implies, stemmed_basename
 import numpy as np
@@ -155,7 +155,7 @@ class Paper:
         
         return reference
     
-    def getNamesAndAffiliations(self, classifier: AffiliationClassifier) -> dict:
+    def getNamesAndAffiliations(self, classifier: AffiliationsPipeline) -> dict:
         self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)
         return self.name_and_affiliation
     

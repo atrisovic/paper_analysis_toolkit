@@ -17,7 +17,6 @@ class CitationClassifier:
         return self.getClassificationOrdering().index(result)
     
 
-
 class MultiCiteClassifier(CitationClassifier):
     def __init__(self, model_checkpoint):
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)

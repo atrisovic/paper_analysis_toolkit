@@ -1,7 +1,7 @@
-from citations.CitationClassifier import MultiCiteClassifier
-from citations.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
-from citations.FoundationModel import FoundationModel
-from documents.Corpus import Corpus
+from classes.CitationClassifier import MultiCiteClassifier
+from classes.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
+from classes.FoundationModel import FoundationModel
+from classes.Corpus import Corpus
 import json, pickle
 import warnings, logging
 from datetime import datetime
@@ -20,7 +20,7 @@ def main():
     parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of foundation models analyzed.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
-    parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
+    parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading classes.")
 
     args = parser.parse_args()
     

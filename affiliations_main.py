@@ -1,10 +1,14 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
-from affiliations.AffiliationClassifier import AffiliationClassifier
-from documents.Corpus import Corpus
+from classes.FewShot import AffiliationsPipeline
+from classes.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
+from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
+from transformers import pipeline
+
+
 nltk.download('punkt')
 
 def main():
@@ -25,24 +29,34 @@ def main():
     
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
 
-    bnb_config = BitsAndBytesConfig(load_in_4bit=True,
-                                    bnb_4bit_compute_dtype=bfloat16)
+    bnb_config = BitsAndBytesConfig(load_in_4bit=load_in_4bit,
+                                    bnb_4bit_compute_dtype=bfloat16) #TODO
 
 
     refresh = False
     try:
         assert(not refresh)
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
-        tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH)
+        tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH, device = device)
     except:
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)
-        tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME)
+        tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
 
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
+    
+    pipeline = pipeline("text-generation", 
+                                model=model, 
+                                tokenizer = tokenizer, 
+                                max_new_tokens=10, 
+                                return_full_text = False)
+    
+    hf_pipe = HuggingFacePipeline(pipeline = pipeline)
+    
 
-    aff_classifier = AffiliationClassifier(model, tokenizer, device)
+    affPipepline = AffiliationsPipeline(pipeline = hf_pipe)
+        
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
                         cluster_info = (args.index, args.workers), 
@@ -50,7 +64,8 @@ def main():
                         filter_path = args.filter_file,
                         lazy = not args.eagerstorage,
                         confirm_paper_ref_sections=False)
-    corpus.getAllAffiliations(classifier = aff_classifier, resultsfile = resultsfile)
+    
+    corpus.getAllAffiliations(classifier = affPipepline, resultsfile = resultsfile)
 
 
 

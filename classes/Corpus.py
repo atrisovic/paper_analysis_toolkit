@@ -1,9 +1,9 @@
-from documents.Paper import Paper, ReferenceSectionCountException
-from citations.CitationClassifier import CitationClassifier
-from citations.Reference import Reference
-from citations.Agglomerator import RankedClassificationCounts, Agglomerator
-from citations.FoundationModel import FoundationModel
-from affiliations.AffiliationClassifier import AffiliationClassifier
+from .Paper import Paper, ReferenceSectionCountException
+from .CitationClassifier import CitationClassifier
+from .Reference import Reference
+from .Agglomerator import RankedClassificationCounts, Agglomerator
+from .FoundationModel import FoundationModel
+from .AffiliationsPipeline import AffiliationsPipeline
 from utils.functional import clusterOrLimitList, stemmed_basename
 
 from typing import List, Tuple, Dict
@@ -125,7 +125,7 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def getAllAffiliations(self, classifier: AffiliationClassifier, resultsfile: str = None):
+    def getAllAffiliations(self, classifier: AffiliationsPipeline, resultsfile: str = None):
         f = open(resultsfile, 'a') if resultsfile else None
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")

@@ -1,7 +1,7 @@
-from citations.TextualReference import TextualReference
-from citations.CitationClassifier import MultiCiteClassifier
+from classes.TextualReference import TextualReference
+from classes.CitationClassifier import MultiCiteClassifier
 from utils.functional import implies
-from citations.FoundationModel import FoundationModel
+from classes.FoundationModel import FoundationModel
 
 from typing import List, Dict, Set
 

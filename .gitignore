@@ -6,3 +6,4 @@
 *.log
 .venv/*
 *.jsonl
+saved_models/*
