@@ -1,6 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
-from classes.AffiliationsPipeline import AffiliationsPipeline
+from classes.Pipelines import AffiliationsPipeline
 from classes.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
@@ -47,7 +47,7 @@ def main():
     pipe = pipeline("text-generation", 
                                 model=model, 
                                 tokenizer = tokenizer, 
-                                max_new_tokens=100, 
+                                max_new_tokens=1000, 
                                 return_full_text = False,
                                 pad_token_id = tokenizer.eos_token_id)
     
