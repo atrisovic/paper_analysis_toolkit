@@ -1,9 +1,9 @@
-from .Paper import Paper, ReferenceSectionCountException
-from .CitationClassifier import CitationClassifier
-from .Reference import Reference
-from .Agglomerator import RankedClassificationCounts, Agglomerator
-from .FoundationModel import FoundationModel
-from .AffiliationsPipeline import AffiliationsPipeline
+from classes.Paper import Paper, ReferenceSectionCountException
+from classes.CitationClassifier import CitationClassifier
+from classes.Reference import Reference
+from classes.Agglomerator import RankedClassificationCounts, Agglomerator
+from classes.FoundationModel import FoundationModel
+from classes.AffiliationsPipeline import AffiliationsPipeline
 from utils.functional import clusterOrLimitList, stemmed_basename
 
 from typing import List, Tuple, Dict
@@ -11,11 +11,11 @@ from tqdm import tqdm
 from os import walk
 from os.path import join, basename
 
-import pandas as pd, logging, json
+import pandas as pd, logging
+
+
 
 logger = logging.getLogger(__name__)
-
-
 
 
 class Corpus:
@@ -125,17 +125,7 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def getAllAffiliations(self, classifier: AffiliationsPipeline, resultsfile: str = None):
-        f = open(resultsfile, 'a') if resultsfile else None
+    def getAllAffiliations(self, pipeline: AffiliationsPipeline):
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
-            results = paper.getNamesAndAffiliations(classifier=classifier)
-            
-            if f:
-                results_string = json.dumps({paper.path: results}) + '\n'
-                logger.debug(f"Writing to {resultsfile}: {results_string}")
-                f.write(results_string)
-                f.flush()
-                
-        if f:
-            f.close()
+            paper.getNamesAndAffiliations(pipeline=pipeline)

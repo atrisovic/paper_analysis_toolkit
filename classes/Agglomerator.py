@@ -1,5 +1,3 @@
-import pandas as pd
-from typing import List
 import logging
 
 # I really don't like how these are organized right now, so this is definitely something with room for improvement.
@@ -27,7 +25,6 @@ class Agglomerator:
         else:
             logger.info(f"Empty results found for info: {info}, nothing saved.")
         
-    
 class RankedClassificationCounts(Agglomerator):
     def __init__(self, group_key = 'modelKey', 
                         additional_key = 'paperId', 
@@ -54,8 +51,7 @@ class RankedClassificationCounts(Agglomerator):
                                                 .set_index(self.group_key)
                                             )
         return classification_counts
-    
-    
+       
 class RankedClassificationCountsYearly(Agglomerator):
     def __init__(self, group_key = 'modelKey', 
                         year_key = 'paperYear', 
@@ -83,7 +79,6 @@ class RankedClassificationCountsYearly(Agglomerator):
             )
         
         return classification_counts
-    
     
 class BestSentencePerPaper(Agglomerator):
     def __init__(self, group_key = 'modelKey', 

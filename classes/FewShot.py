@@ -1,11 +1,9 @@
 from langchain_core.prompts import PromptTemplate
 from langchain_core.prompts.few_shot import FewShotPromptTemplate
 from transformers import Pipeline
-from pydantic import BaseModel as PydanticModel, ValidationError
+from pydantic import BaseModel as PydanticModel
 from typing import Dict, List, Literal, Union
 import json
-
-import os
 
 def repair_brackets(s, depth = 1):
     return s.replace('{', '{{' * depth).replace('}', '}}' * depth)
@@ -41,20 +39,12 @@ class FewShotPipeline:
         self.outputClass = outputClass
         
     def addExample(self, question: str, answer: Union[str, PydanticModel]):
-        
         if (isinstance(answer, PydanticModel)):
-            example = FewShotExample(question = repair_brackets(question), 
-                                     answer = repair_brackets(answer.model_dump_json(indent=1))
-                                     )
-            self.examples.append(example)
-            
+            example = FewShotExample(question = repair_brackets(question), answer = repair_brackets(answer.model_dump_json(indent=1)))
         else:
-            example = FewShotExample(
-                                    question = repair_brackets(question), 
-                                     answer = repair_brackets(answer)
-                                     )
-            self.examples.append(example)
+            example = FewShotExample(question = repair_brackets(question), answer = repair_brackets(answer))
             
+        self.examples.append(example)   
             
     def getPromptTemplater(self, max_examples: int = None) -> str:
         schema = json.dumps(self.outputClass.model_json_schema()['$defs'], indent=1)
@@ -91,3 +81,5 @@ class FewShotPipeline:
         chain = prompt_template | self.pipeline
         result = chain.invoke({'input': input})
         return result
+    
+    

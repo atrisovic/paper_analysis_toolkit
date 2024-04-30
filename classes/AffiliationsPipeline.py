@@ -1,21 +1,18 @@
-from torch import TensorType
-import regex as re
-import json
-from os.path import join
-from typing import List
-from tqdm import tqdm
-
-from pydantic import BaseModel as PydanticModel, ValidationError
-import re
-from typing import Dict, List, Literal, Tuple
+from pydantic import BaseModel as PydanticModel
 from classes.FewShot import FewShotPipeline, PaperAffiliations, Contributor, Institution
 from transformers import Pipeline
+import logging, json
 
+
+logger = logging.getLogger(__name__)
 
 
 class AffiliationsPipeline(FewShotPipeline):
     def __init__(self, pipeline: Pipeline, outputClass: PydanticModel = PaperAffiliations, resultsfile: str = None):
         super().__init__(pipeline = pipeline, outputClass=outputClass)
+        
+        
+        self.resultsfile = resultsfile
         
         for question, answer in self.getExamples():
             self.addExample(question=question, answer=answer)
@@ -43,23 +40,23 @@ class AffiliationsPipeline(FewShotPipeline):
         return {example_text: paperAffiliations}.items()
     
 
-    def classifyFromTextEnsureJSON(self, text: str, tolerance=5) -> dict:
+    def generateAsModel(self, input: str, tolerance=1, paperId: str = None) -> PydanticModel:
         counter = 0
-        json_result = None
-        while counter < tolerance and not json_result:
+        output_object = None
+        
+        while counter < tolerance and not output_object:
             counter += 1
-            json_string_results = self.classifyFromText(text)
+            results = self.generate(input = input)
             try:
-                json_result = json.loads(json_string_results)
+                output_object = self.outputClass(**json.loads(results))
             except:
                 pass
 
-        try:
-            structured_json = (
-                self.stripJSONStructure(json_result) if json_result else None
-            )
-        except:
-            structured_json = None
-
-        return structured_json
+        if (self.resultsfile and output_object):
+            assert(id is not None), f"Found resultsfile but paperId parameter not passed."
+            json_result = {paperId: output_object.model_dump()}
+            with open(self.resultsfile, 'a+') as f:
+                f.write(json.dumps(json_result) + '\n')
+        
+        return output_object
 

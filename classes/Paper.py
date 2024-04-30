@@ -10,6 +10,7 @@ from utils.functional import implies, stemmed_basename
 from typing import List, Union
 import numpy as np
 from os.path import basename
+from pydantic import BaseModel as PydanticModel
 
 
 logger = logging.getLogger(__name__)
@@ -29,7 +30,7 @@ class Paper:
         self.sections: List[str] = None
         self.sentences: Dict[str, List[str]] = None
         self.references: Dict[str, Reference]= {}
-        self.name_and_affiliation: dict = None
+        self.name_and_affiliation: PydanticModel = None
         
     
         if (not self.lazy):
@@ -165,8 +166,8 @@ class Paper:
         else:
             return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
     
-    def getNamesAndAffiliations(self, classifier: AffiliationsPipeline) -> dict:
-        self.name_and_affiliation = classifier.classifyFromTextEnsureJSON(self.pre_abstract)
+    def getNamesAndAffiliations(self, pipeline: AffiliationsPipeline) -> dict:
+        self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, paperId = self.id)
         return self.name_and_affiliation
     
     def getGenericHeadingCheckerFunction(self, *args):    

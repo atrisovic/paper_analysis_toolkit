@@ -1,13 +1,13 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
-from classes.FewShot import AffiliationsPipeline
+from classes.AffiliationsPipeline import AffiliationsPipeline
 from classes.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
 from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from transformers import pipeline
-
+import os
 
 nltk.download('punkt')
 
@@ -28,11 +28,9 @@ def main():
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
-
-    bnb_config = BitsAndBytesConfig(load_in_4bit=load_in_4bit,
-                                    bnb_4bit_compute_dtype=bfloat16) #TODO
-
-
+    bnb_config = None if device == 'mps' else BitsAndBytesConfig(load_in_4bit=True,
+                                    bnb_4bit_compute_dtype=bfloat16) 
+    
     refresh = False
     try:
         assert(not refresh)
@@ -46,16 +44,16 @@ def main():
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
     
-    pipeline = pipeline("text-generation", 
+    pipe = pipeline("text-generation", 
                                 model=model, 
                                 tokenizer = tokenizer, 
-                                max_new_tokens=10, 
-                                return_full_text = False)
+                                max_new_tokens=100, 
+                                return_full_text = False,
+                                pad_token_id = tokenizer.eos_token_id)
     
-    hf_pipe = HuggingFacePipeline(pipeline = pipeline)
+    hf_pipe = HuggingFacePipeline(pipeline = pipe)
     
-
-    affPipepline = AffiliationsPipeline(pipeline = hf_pipe)
+    affPipepline = AffiliationsPipeline(pipeline = hf_pipe, resultsfile = resultsfile)
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
@@ -65,7 +63,7 @@ def main():
                         lazy = not args.eagerstorage,
                         confirm_paper_ref_sections=False)
     
-    corpus.getAllAffiliations(classifier = affPipepline, resultsfile = resultsfile)
+    corpus.getAllAffiliations(pipeline = affPipepline)
 
 
 
