@@ -5,7 +5,6 @@ from classes.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
-from langchain_community.llms.huggingface_pipeline import HuggingFacePipeline
 from transformers import pipeline
 import os
 
@@ -31,7 +30,7 @@ def main():
     bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
     
-    refresh = True
+    refresh = False
     try:
         assert(not refresh)
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
@@ -46,11 +45,6 @@ def main():
 
         
     affPipepline = AffiliationsPipeline(model  = model, tokenizer = tokenizer, device = device, resultsfile = resultsfile)
-    
-    result = affPipepline.generate(input = "Could you give me some recommendations for restaurants in DC area?")
-    print(result)
-    
-    exit()
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 

@@ -3,8 +3,6 @@ from classes.Affiliations import PaperAffiliations, Contributor, Institution
 from transformers import Pipeline
 import logging, json
 from typing import Dict, List, Union
-from langchain_core.prompts import PromptTemplate
-from langchain_core.prompts.few_shot import FewShotPromptTemplate
 from transformers import Pipeline
 
 
@@ -44,11 +42,7 @@ class FewShotPipeline:
         return json.dumps(self.outputClass.model_json_schema()['$defs'], indent=1)
     
     def wrapInstructions(self, input: str):
-        return input
-        return f"""Please read this text, and return the following information in the JSON format provided: 
-{self.getSchema()}\n
-The output should match exactly the JSON format below. The text is as follows:\n\n {input}"""      
-    
+        pass   
     
     def generateZeroShotPrompt(self, input: str, output: str = None):
         zero_shot = [{"role": "user", "content": self.wrapInstructions(input)}]
@@ -67,15 +61,13 @@ The output should match exactly the JSON format below. The text is as follows:\n
             
         return few_shots
         
-        
-    
     def generate(self, input: str, max_examples: int = None):
         few_shot = self.getFewShotPrompt(input)
         encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
 
         model_inputs = encodeds.to(self.device)
 
-        generated_ids = self.model.generate(model_inputs, max_new_tokens=100, pad_token_id = self.tokenizer.eos_token_id, do_sample=True, temperature=.5)
+        generated_ids = self.model.generate(model_inputs, max_new_tokens=5000, pad_token_id = self.tokenizer.eos_token_id, do_sample=True, temperature=.5)
         decoded = self.tokenizer.batch_decode(generated_ids)[0]
     
         return decoded
@@ -93,7 +85,7 @@ class AffiliationsPipeline(FewShotPipeline):
         self.resultsfile = resultsfile
         
         for question, answer in self.getExamples():
-            pass #self.addExample(question=question, answer=answer)
+            self.addExample(question=question, answer=answer)
             
 
     def getExamples(self):
@@ -131,6 +123,11 @@ class AffiliationsPipeline(FewShotPipeline):
         )
         
         return paperAffiliations.model_dump_json(indent = 1)
+    
+    def wrapInstructions(self, input: str):
+        return f"""Please read this text, and return the following information in the JSON format provided: 
+{self.getSchema()}\n
+The output should match exactly the JSON format below. The text is as follows:\n\n {input}"""      
     
 
     def generateAsModel(self, input: str, tolerance= 5, paperId: str = None) -> PydanticModel:
