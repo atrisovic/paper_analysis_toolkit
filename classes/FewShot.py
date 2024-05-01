@@ -32,9 +32,6 @@ class FewShotPipeline:
             
         self.examples.append(example)   
         
-    def getSchema(self):
-        pass
-    
     def wrapInstructions(self, input: str):
         pass   
     

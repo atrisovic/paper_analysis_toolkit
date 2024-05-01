@@ -26,7 +26,7 @@ class Agglomerator:
             logger.info(f"Empty results found for info: {info}, nothing saved.")
         
 class RankedClassificationCounts(Agglomerator):
-    def __init__(self, group_key = 'modelKey', 
+    def __init__(self, group_key = 'modelId', 
                         additional_key = 'paperId', 
                         classification_col = 'classification', 
                         ordering_col = 'classification_order',
@@ -53,7 +53,7 @@ class RankedClassificationCounts(Agglomerator):
         return classification_counts
        
 class RankedClassificationCountsYearly(Agglomerator):
-    def __init__(self, group_key = 'modelKey', 
+    def __init__(self, group_key = 'modelId', 
                         year_key = 'paperYear', 
                         additional_key = 'paperId',
                         classification_col = 'classification', 
@@ -81,7 +81,7 @@ class RankedClassificationCountsYearly(Agglomerator):
         return classification_counts
     
 class BestSentencePerPaper(Agglomerator):
-    def __init__(self, group_key = 'modelKey', 
+    def __init__(self, group_key = 'modelId', 
                         year_key = 'paperYear', 
                         additional_key = 'paperId', 
                         classification_col = 'classification', 

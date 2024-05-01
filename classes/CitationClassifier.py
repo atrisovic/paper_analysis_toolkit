@@ -1,7 +1,10 @@
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipeline
 from torch import cuda, backends
-from typing import Tuple, List, Set
+from typing import Tuple, List, Set, Literal
 import regex as re
+from .FewShot import FewShotPipeline
+from pydantic import BaseModel as PydanticModel
+from .Parser import OutputParser
 
 class CitationClassifier:
     def __init__(self):
@@ -16,7 +19,6 @@ class CitationClassifier:
     def getClassificationRanking(self, result: str):
         return self.getClassificationOrdering().index(result)
     
-
 class MultiCiteClassifier(CitationClassifier):
     def __init__(self, model_checkpoint):
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
@@ -34,8 +36,6 @@ class MultiCiteClassifier(CitationClassifier):
     
     def getClassificationOrdering(self):
         return ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background']
-
-        
 
 class MultiCiteExtendedClassifider(CitationClassifier):
     def __init__(self, model_checkpoint):
@@ -65,7 +65,6 @@ class MultiCiteExtendedClassifider(CitationClassifier):
     def getClassificationOrdering(self):
         return ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background', 'usetobackground']
     
-
 class LocationBasedClassifier(CitationClassifier):
     def __init__(self):
         pass
@@ -87,7 +86,6 @@ class LocationBasedClassifier(CitationClassifier):
             return 'background'
         
         return 'NONE'
-
 
 class GranularCitationClassier(CitationClassifier):
     def __init__(self):
@@ -130,3 +128,57 @@ class GranularCitationClassier(CitationClassifier):
     
     def getClassificationRanking(self, result):
         return  self.getClassificationOrdering().index(result)
+      
+class MistralEnhancedMulticiteClassifier(CitationClassifier):
+    def __init__(self, model_checkpoint, llm_model, llm_tokenizer, device = None):    
+        device = device or ('mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu')
+        self.mistral_pipeline = MistralCitationPipeline(model = llm_model, tokenizer=llm_tokenizer, device = device)
+
+        tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
+        model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)
+        self.multicite_classifier = pipeline('text-classification', model=model, tokenizer=tokenizer, device = device)
+        
+    def classify_text(self, text, *args) -> Tuple[str, float]:
+        results = self.multicite_classifier(text, truncation = True)
+        as_dictionary = {result['label']: result['score'] for result in results}
+
+        best_label = max(as_dictionary, key=as_dictionary.get)
+        
+        if (best_label in ('uses', 'extends')):
+            llm_label: Classification = self.mistral_pipeline.generateAsModel(input = text)
+            if (llm_label is not None):
+                return llm_label.classification
+            else:
+                print("Classification failed!")
+
+        
+        return best_label
+    
+    def getClassificationOrdering(self):
+        return ['extends', 'uses', 'differences', 'similarities', 'future_work', 'motivation', 'background']
+    
+    
+class Classification(PydanticModel):
+    classification: Literal['uses', 'extends']
+    
+class MistralCitationPipeline(FewShotPipeline):
+    def __init__(self, model, tokenizer, device = None):
+        super().__init__(model = model, tokenizer=tokenizer, device=device)
+    
+        self.outputParser = OutputParser(outputClass = Classification)
+    def wrapInstructions(self, input: str):
+        return f"""The following sentence is from an academic paper which cites a foundation model (a pretrained machine learning model for a particular task). 
+The particular model isn't important, but we'd like to discern *how* the paper makes use of the model. In particular, we want to classify as 'uses' if the paper only deploys the model,
+but as 'extends' if specific alterations are being made to the model, changing the model itself. Please response in JSON format {{'classification': 'uses | extends'}}, classifying the following sentence {input}"""   
+
+    def generateAsModel(self, input: str, tolerance= 5, paperId: str = None) -> PydanticModel:
+        counter = 0
+        output_object = None
+        
+        while counter < tolerance and not output_object:
+            counter += 1
+            results = self.generate(input = input)
+            output_object = self.outputParser.parse(results)
+             
+        
+        return output_object

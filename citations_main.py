@@ -1,14 +1,16 @@
-from classes.CitationClassifier import MultiCiteClassifier
+from classes.CitationClassifier import MultiCiteClassifier, MistralEnhancedMulticiteClassifier
 from classes.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from classes.FoundationModel import FoundationModel
 from classes.Corpus import Corpus
-import json, pickle
+import pickle
 import warnings, logging
 from datetime import datetime
 import argparse
-from config import FOUNDATION_MODELS_PATH, MARKDOWN_FILES_PATH, CITATION_MODEL_PATH, OPEN_ACCESS_PAPER_XREF
+from config import *
 from utils.functional import extract_paper_metadata
 import pandas as pd
+from torch import cuda, backends, bfloat16
 
 logger = logging.getLogger(__name__)
 warnings.filterwarnings("ignore")
@@ -31,7 +33,25 @@ def main():
     resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
-    classifier = MultiCiteClassifier(CITATION_MODEL_PATH)
+    
+    device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
+    print(f"Using device = {device}")
+    bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
+                                    bnb_4bit_compute_dtype=bfloat16) 
+    
+    refresh = False
+    try:
+        assert(not refresh)
+        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
+        tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH, device = device)
+    except:
+        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)
+        tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
+
+        model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
+        tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
+        
+    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)
     
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
