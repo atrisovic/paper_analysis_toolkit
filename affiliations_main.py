@@ -1,6 +1,6 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
-from classes.Pipelines import AffiliationsPipeline
+
 from classes.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
@@ -8,9 +8,12 @@ import nltk, logging, argparse
 from transformers import pipeline
 import os
 
+from classes.Affiliations import AffiliationsPipeline, PaperAffiliations, Contributor, Institution
+
 nltk.download('punkt')
 
 def main():
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--index', default = 1, type = int, help = 'One-indexed index of worker for this particular job.')
     parser.add_argument('-n', '--workers', default = 1, type = int, help = 'Total jobs to be run *in separate jobs*')
@@ -27,6 +30,7 @@ def main():
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
+    print(f"Using device = {device}")
     bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
     

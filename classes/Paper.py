@@ -3,7 +3,7 @@ import regex as re
 from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
-from classes.Pipelines import AffiliationsPipeline
+from classes.Affiliations import AffiliationsPipeline
 from .FoundationModel import FoundationModel
 from datetime import datetime
 from utils.functional import implies, stemmed_basename
