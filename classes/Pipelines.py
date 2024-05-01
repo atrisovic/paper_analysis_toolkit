@@ -8,81 +8,93 @@ from langchain_core.prompts.few_shot import FewShotPromptTemplate
 from transformers import Pipeline
 
 
-def repair_brackets(s, depth = 1):
-    return s.replace('{', '{{' * depth).replace('}', '}}' * depth)
-
 
 logger = logging.getLogger(__name__)
 
 
 class FewShotExample(PydanticModel):
-    question: str
-    answer: str
+    input: str
+    output: str
     
+    
+# just want to log here the reason we didn't continue using the fewshot functionality from langchain
+# firstly, it had some strange behvaior with curly brackets that was a bit clunky to get around
+# secondly, pipelines don't seem to include instruction tuning, which is pretty darn important
 class FewShotPipeline:
     pipeline: Pipeline
     examples: List[Dict]
     
     
-    def __init__(self, pipeline: Pipeline, outputClass: PydanticModel = PaperAffiliations):
-        self.pipeline = pipeline
+    def __init__(self, model, tokenizer, device = None, outputClass: PydanticModel = PaperAffiliations):
+        self.model = model
+        self.tokenizer = tokenizer
         self.examples = []
+        self.device = device
         self.outputClass = outputClass
         
     def addExample(self, question: str, answer: Union[str, PydanticModel]):
         if (isinstance(answer, PydanticModel)):
-            example = FewShotExample(question = repair_brackets(question), answer = repair_brackets(answer.model_dump_json(indent=1)))
+            example = FewShotExample(input = question, output = answer.model_dump_json(indent=1))
         else:
-            example = FewShotExample(question = repair_brackets(question), answer = repair_brackets(answer))
+            example = FewShotExample(input = question, output = answer)
             
         self.examples.append(example)   
+        
+    def getSchema(self):
+        return json.dumps(self.outputClass.model_json_schema()['$defs'], indent=1)
+    
+    def wrapInstructions(self, input: str):
+        return input
+        return f"""Please read this text, and return the following information in the JSON format provided: 
+{self.getSchema()}\n
+The output should match exactly the JSON format below. The text is as follows:\n\n {input}"""      
+    
+    
+    def generateZeroShotPrompt(self, input: str, output: str = None):
+        zero_shot = [{"role": "user", "content": self.wrapInstructions(input)}]
+        
+        if output:
+            zero_shot.append({"role": "assistant", "content": output})
+        
+        return zero_shot
+
+    def getFewShotPrompt(self, input: str, max_examples: int = None):
+        few_shots = []
+        for example in self.examples[:max_examples]:
+            few_shots += self.generateZeroShotPrompt(example.input, example.output)
             
-    def getPromptTemplater(self, max_examples: int = None) -> str:
-        schema = json.dumps(self.outputClass.model_json_schema()['$defs'], indent=1)
-             
-        template= f"""Please read this text, and return the following information in the JSON format provided: \n
-                   {repair_brackets(schema, depth = 2)}\n
-                    The output should match exactly the JSON format given. The text is as follows {{question}}:\n JSON:\n{{answer}}"""
-                                
-        examples = [example.model_dump() for example in self.examples][:max_examples]
-        
-        suffix=f"""Please read this text, and return the following information in the JSON format provided: \n 
-                   {repair_brackets(schema)}
-                    \n The output should match exactly the JSON format given. The text is as follows {input}:\n JSON:\n"""
+        few_shots += self.generateZeroShotPrompt(input = input, output = None)
+            
+        return few_shots
         
         
-        
-        example_prompt = PromptTemplate(
-                    input_variables=["question", "answer"], 
-                    template = template
-                )             
-   
-        prompt_templater = FewShotPromptTemplate(
-                    examples=examples,
-                    example_prompt=example_prompt,
-                    suffix=suffix,
-                    input_variables=["input"],
-                )
-        
-        return prompt_templater
     
     def generate(self, input: str, max_examples: int = None):
-        prompt_template = self.getPromptTemplater(max_examples = max_examples)
-        
-        chain = prompt_template | self.pipeline
-        result = chain.invoke({'input': input})
-        return result
+        few_shot = self.getFewShotPrompt(input)
+        encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
+
+        model_inputs = encodeds.to(self.device)
+
+        generated_ids = self.model.generate(model_inputs, max_new_tokens=100, pad_token_id = self.tokenizer.eos_token_id, do_sample=True, temperature=.5)
+        decoded = self.tokenizer.batch_decode(generated_ids)[0]
+    
+        return decoded
+    
+    
+    
+    
+    
     
 class AffiliationsPipeline(FewShotPipeline):
-    def __init__(self, pipeline: Pipeline, outputClass: PydanticModel = PaperAffiliations, resultsfile: str = None):
-        super().__init__(pipeline = pipeline, outputClass=outputClass)
+    def __init__(self, model, tokenizer, device, outputClass: PydanticModel = PaperAffiliations, resultsfile: str = None):
+        super().__init__(model = model, tokenizer=tokenizer, device = device, outputClass=outputClass)
         
         
         self.resultsfile = resultsfile
         
         for question, answer in self.getExamples():
-            self.addExample(question=question, answer=answer)
-
+            pass #self.addExample(question=question, answer=answer)
+            
 
     def getExamples(self):
         example_text = "# on the helpfulness of large language models\n\nbill ackendorf, Jolene baylor\n\nyuxin shu, khalid saifullah\n\nalex fogelson ({}^{\\dagger}), ana trisovic, neil thompson({}^{\\ddagger}), bob dilan\n\n({}^{\\ddagger}) new york university, massachusetts institute of technology"
@@ -105,8 +117,23 @@ class AffiliationsPipeline(FewShotPipeline):
         
         return {example_text: paperAffiliations}.items()
     
+    def getSchema(self):
+        paperAffiliations = PaperAffiliations(
+                        contributors = [ 
+                                        Contributor(first = "firstname", last= "lastname", gender= "male"),
+                                        Contributor(first= "firstname", last= "lastname", gender= "female")
+                                ],
+                        institutions = [
+                                        Institution(name = "University of City", type = "academic"),
+                                        Institution(name = "Major Company", type =  "industry")
+                                ],
+                        countries = ["United States", "China", "Other Countries"]
+        )
+        
+        return paperAffiliations.model_dump_json(indent = 1)
+    
 
-    def generateAsModel(self, input: str, tolerance=1, paperId: str = None) -> PydanticModel:
+    def generateAsModel(self, input: str, tolerance= 5, paperId: str = None) -> PydanticModel:
         counter = 0
         output_object = None
         
@@ -116,7 +143,7 @@ class AffiliationsPipeline(FewShotPipeline):
             try:
                 output_object = self.outputClass(**json.loads(results))
             except:
-                pass
+                print(results)
 
         if (self.resultsfile and output_object):
             assert(id is not None), f"Found resultsfile but paperId parameter not passed."

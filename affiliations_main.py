@@ -28,10 +28,10 @@ def main():
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
-    bnb_config = None if device == 'mps' else BitsAndBytesConfig(load_in_4bit=True,
+    bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
     
-    refresh = False
+    refresh = True
     try:
         assert(not refresh)
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
@@ -43,17 +43,14 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
+
+        
+    affPipepline = AffiliationsPipeline(model  = model, tokenizer = tokenizer, device = device, resultsfile = resultsfile)
     
-    pipe = pipeline("text-generation", 
-                                model=model, 
-                                tokenizer = tokenizer, 
-                                max_new_tokens=1000, 
-                                return_full_text = False,
-                                pad_token_id = tokenizer.eos_token_id)
+    result = affPipepline.generate(input = "Could you give me some recommendations for restaurants in DC area?")
+    print(result)
     
-    hf_pipe = HuggingFacePipeline(pipeline = pipe)
-    
-    affPipepline = AffiliationsPipeline(pipeline = hf_pipe, resultsfile = resultsfile)
+    exit()
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
