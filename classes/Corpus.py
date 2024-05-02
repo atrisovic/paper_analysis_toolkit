@@ -4,7 +4,7 @@ from classes.Reference import Reference
 from classes.Agglomerator import RankedClassificationCounts, Agglomerator
 from classes.FoundationModel import FoundationModel
 from classes.Affiliations import AffiliationsPipeline
-from utils.functional import clusterOrLimitList, stemmed_basename
+from classes.functional import clusterOrLimitList, stemmed_basename
 
 from typing import List, Tuple, Dict
 from tqdm import tqdm

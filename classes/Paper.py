@@ -6,7 +6,7 @@ import logging
 from classes.Affiliations import AffiliationsPipeline
 from .FoundationModel import FoundationModel
 from datetime import datetime
-from utils.functional import implies, stemmed_basename
+from classes.functional import implies, stemmed_basename
 from typing import List, Union
 import numpy as np
 from os.path import basename

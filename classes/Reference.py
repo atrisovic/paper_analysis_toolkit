@@ -1,6 +1,6 @@
 from classes.TextualReference import TextualReference
 from classes.CitationClassifier import MultiCiteClassifier
-from utils.functional import implies
+from classes.functional import implies
 from classes.FoundationModel import FoundationModel
 
 from typing import List, Dict, Set

@@ -8,7 +8,7 @@ import warnings, logging
 from datetime import datetime
 import argparse
 from config import *
-from utils.functional import extract_paper_metadata
+from classes.functional import extract_paper_metadata
 import pandas as pd
 from torch import cuda, backends, bfloat16
 
