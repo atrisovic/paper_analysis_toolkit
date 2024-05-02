@@ -31,7 +31,10 @@ class FewShotPipeline:
             example = FewShotExample(input = question, output = answer)
             
         self.examples.append(example)   
-        
+    
+    def getExamples(self):
+        pass
+    
     def wrapInstructions(self, input: str):
         pass   
     

@@ -149,8 +149,7 @@ class MistralEnhancedMulticiteClassifier(CitationClassifier):
             if (llm_label is not None):
                 return llm_label.classification
             else:
-                print("Classification failed!")
-
+                pass
         
         return best_label
     
