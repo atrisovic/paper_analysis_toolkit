@@ -1,12 +1,12 @@
 import pandas as pd
-from classes.CitationClassifier import MistralEnhancedMulticiteClassifier
+from classes.CitationClassifier import MistralEnhancedMulticiteClassifier, MultiCiteClassifier
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import *
 import pandas as pd
 from torch import cuda, backends, bfloat16
 from tqdm import tqdm
 
-df = pd.read_csv('../data/task_2_model_reuse.csv').rename(columns = {'How does it use <model.name> ?': 'manual'})
+df = pd.read_csv('data/task_2_model_reuse.csv').rename(columns = {'How does it use <model.name> ?': 'manual'})
 
 df = df[df["Citation Sentence"].notna()]
 df = df.dropna(subset=['manual'])
@@ -30,14 +30,27 @@ except:
     model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
     tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
     
-classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)
+enhanced_multicite = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)
+multicite_classifier = MultiCiteClassifier(model_checkpoint=CITATION_MODEL_PATH)
 
 
 classifications = []
 for sentence in tqdm(df['Citation Sentence']):  
-    result = classifier.classify_text(sentence)
+    result = enhanced_multicite.classify_text(sentence)
     classifications.append(result)
     
 df['MCLLM'] = classifications
+
+
+
+
+classifications = []
+for sentence in tqdm(df['Citation Sentence']):  
+    result = multicite_classifier.classify_text(sentence)
+    classifications.append(result)
+    
+df['MC'] = classifications
+
+
 
 df.to_csv('mcllm_cm.csv')
