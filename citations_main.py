@@ -30,12 +30,14 @@ def main():
     
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/citations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
-    resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.log"
+    resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.csv"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
     
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
+    
+    '''
     bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
     
@@ -51,7 +53,9 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
-    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)
+    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)'''
+    
+    classifier = MultiCiteClassifier(model_checkpoint=CITATION_MODEL_PATH)
     
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
@@ -63,16 +67,11 @@ def main():
                         )
 
     models = FoundationModel.modelsFromJSON(FOUNDATION_MODELS_PATH)
-    
-    agglomerator = RankedClassificationCountsYearly(resultsfile=resultsfile)
-      
+          
     corpus.findAllReferencesAllModels(models = models,
-                                     classifier = classifier, 
-                                     agglomerator=agglomerator)
+                                     classifier = classifier,
+                                     resultsfile = resultsfile)
 
-    with open(f'pickle/corpus{args.index if args.workers > 1 else ""}_{right_now}.pkl', 'wb') as f:
-        df = pd.DataFrame(corpus.getAllTextualReferences(as_dict = True))
-        pickle.dump(df, f)
         
 if __name__ == '__main__':
     main()

@@ -1,7 +1,6 @@
 from classes.Paper import Paper, ReferenceSectionCountException
 from classes.CitationClassifier import CitationClassifier
 from classes.Reference import Reference
-from classes.Agglomerator import RankedClassificationCounts, Agglomerator
 from classes.FoundationModel import FoundationModel
 from classes.Affiliations import AffiliationsPipeline
 from classes.functional import clusterOrLimitList, stemmed_basename
@@ -87,13 +86,6 @@ class Corpus:
         self.bad_papers: List[Tuple[str, Exception]] = bad_papers
  
         return good_papers, bad_papers
-     
-    def agglomerateResultsByTitle(self, id: str, agglomerator: Agglomerator):
-        textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('modelId') == id]
-        df = pd.DataFrame.from_dict(textRefByKey)
-        
-        if (len(df) > 0):
-            agglomerator.saveQuery(df)
   
     def findAllReferencesForModel(self, model: FoundationModel, classifier: CitationClassifier):
         logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
@@ -102,22 +94,22 @@ class Corpus:
         logger.info(f"References successfully saved to underlying paper objects.")
             
     def findAllReferencesAllModels(self, models = List[FoundationModel],
-                                        classifier: CitationClassifier = None, 
-                                        agglomerator: Agglomerator = None):
+                                        classifier: CitationClassifier = None,
+                                        resultsfile: str = None):
         
-        models = clusterOrLimitList(models, self.cluster_info, self.foundation_model_limit)        
+        models = clusterOrLimitList(L = models, cluster_info = None, limit = self.foundation_model_limit)        
 
         logger.info(f"Finding references to {len(models)} foundation models in corpus {'and' if classifier else 'without'} classifying sentences.")
+        header = True
         for model in tqdm(models):
             self.findAllReferencesForModel(model = model, classifier=classifier)
             
-            if classifier and agglomerator:
-                self.agglomerateResultsByTitle(model.id, agglomerator = agglomerator)
+            textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('modelId') == model.id]
+            df = pd.DataFrame.from_dict(textRefByKey)
+            if resultsfile and len(df) > 0:
+                df.to_csv(resultsfile, mode='a', index=False, header=header)
+                header = False
     
-    def agglomerateAllTextualReferences(self, agglomerator: Agglomerator):
-        df = pd.DataFrame.from_dict(self.getAllTextualReferences(as_dict = True))
-        classification_counts = agglomerator.applyQuery(df)
-        return classification_counts
             
     def getAllReferences(self) -> List[Tuple[Paper, Reference]]:
         return [reference for paper in self.papers for _, reference in paper.references.items()]
