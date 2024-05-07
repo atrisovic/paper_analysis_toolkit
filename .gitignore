@@ -13,4 +13,4 @@ config.py
 .venv/*
 saved_models/*
 nltk_data/*
-
+results/*
