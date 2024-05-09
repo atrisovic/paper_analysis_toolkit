@@ -37,8 +37,7 @@ class Paper:
             self.getSections()
             self.getSentences()
             
-        self.setPaperTitle()
-        self.setPreAbstract()
+        self.setPaperAttributes()
                                 
         if (confirm_reference_section):
             self.checkReferenceSectionCount()
@@ -107,16 +106,20 @@ class Paper:
         
         return valid_sections
     
-    def setPaperTitle(self, content = None):      
+    def setPaperAttributes(self, content = None):      
         content = content or self.getContent()   
+        
         first_line = content.split('\n')[0]
         paper_title = re.sub(r'#','', first_line)
         self.title = paper_title   
         
-    def setPreAbstract(self, content = None):
-        content = content or self.getContent()
         match = re.search(r'#+\s?abstract', content)
         self.pre_abstract = None if match is None else content[:match.start()]
+        
+        match = re.search(r'#+\s?introduction', content)
+        self.preIntro = None if match is None else content[:match.start()]
+        
+
         
     def normalizeNumericalCitations(self, content: str) -> str:
         # [1,2,3,4,5] =====> [1],[2],[3],[4],[5]
@@ -168,6 +171,10 @@ class Paper:
     
     def getNamesAndAffiliations(self, pipeline: AffiliationsPipeline) -> dict:
         self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, paperId = self.id)
+        
+        #if (self.name_and_affiliation is None and self.preIntro is not None):
+        #    self.name_and_affiliation = pipeline.generateAsModel(input = self.preIntro)
+            
         return self.name_and_affiliation
     
     def getGenericHeadingCheckerFunction(self, *args):    

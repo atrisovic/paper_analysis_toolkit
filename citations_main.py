@@ -37,7 +37,7 @@ def main():
     device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
     
-    '''
+    
     bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
     
@@ -53,9 +53,9 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
-    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)'''
+    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,llm_model=model,llm_tokenizer=tokenizer, device=device)
     
-    classifier = MultiCiteClassifier(model_checkpoint=CITATION_MODEL_PATH)
+    #classifier = MultiCiteClassifier(model_checkpoint=CITATION_MODEL_PATH)
     
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
