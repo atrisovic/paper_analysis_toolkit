@@ -1,7 +1,7 @@
-from classes.TextualReference import TextualReference
-from classes.CitationClassifier import MultiCiteClassifier
-from classes.functional import implies
-from classes.FoundationModel import FoundationModel
+from src.document.textual_reference import TextualReference
+from src.classifier.CitationClassifier import MultiCiteClassifier
+from src.functional import implies
+from src.process.FoundationModel import FoundationModel
 
 from typing import List, Dict, Set
 
@@ -80,7 +80,7 @@ class Reference:
         for textualReference in self.textualReferences:
             textualReference.classify(classifier=classifier)
             
-    def getAllTextualReferences(self, as_dict = False):
+    def getAllTextualReferences(self, as_dict = True):
         if (as_dict):
             return [textRef.as_dict() | self.model.as_dict() for textRef in self.textualReferences]
         else:

@@ -40,7 +40,7 @@ class OutputParser:
             
         return obj
     
-    def stripModel(self, obj: Optional[dict]):
+    def stripModel(self, obj: Optional[dict]) -> Optional[PydanticModel]:
         if (obj is None):
             return None
         
@@ -49,7 +49,7 @@ class OutputParser:
         except:
             return None
         
-    def parse(self, text: str) -> Optional[str]:
+    def parse(self, text: str) -> Optional[PydanticModel]:
         output = self.stripOutput(text)
         json_obj = self.stripJSON(output)
         model = self.stripModel(json_obj)

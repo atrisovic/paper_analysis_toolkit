@@ -1,5 +1,6 @@
 import pandas as pd
-from classes.CitationClassifier import MistralEnhancedMulticiteClassifier, MultiCiteClassifier
+from src.classifier.MultiCiteClassifier import MultiCiteClassifier
+from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifier
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from config import *
 import pandas as pd

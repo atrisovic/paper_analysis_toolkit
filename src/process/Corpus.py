@@ -1,9 +1,9 @@
-from classes.Paper import Paper, ReferenceSectionCountException
-from classes.CitationClassifier import CitationClassifier
-from classes.Reference import Reference
-from classes.FoundationModel import FoundationModel
-from classes.Affiliations import AffiliationsPipeline
-from classes.functional import clusterOrLimitList, stemmed_basename
+from src.document.paper import Paper, ReferenceSectionCountException
+from src.classifier.CitationClassifier import CitationClassifier
+from src.document.reference import Reference
+from src.process.FoundationModel import FoundationModel
+from src.language_models.Affiliations import AffiliationsPipeline
+from src.functional import clusterOrLimitList, stemmed_basename
 
 from typing import List, Tuple, Dict
 from tqdm import tqdm

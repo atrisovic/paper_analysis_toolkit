@@ -1,14 +1,14 @@
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
 
-from classes.Corpus import Corpus
+from src.process.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
 from transformers import pipeline
 import os
 
-from classes.Affiliations import AffiliationsPipeline, PaperAffiliations, Contributor, Institution
+from src.language_models.Affiliations import AffiliationsPipeline, PaperAffiliations, Contributor, Institution
 
 nltk.download('punkt')
 

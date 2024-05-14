@@ -1,14 +1,15 @@
-from classes.CitationClassifier import MultiCiteClassifier, MistralEnhancedMulticiteClassifier
-from classes.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
+from src.classifier.MultiCiteClassifier import MultiCiteClassifier
+from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifier
+from src.analysis.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from classes.FoundationModel import FoundationModel
-from classes.Corpus import Corpus
+from src.process.FoundationModel import FoundationModel
+from src.process.Corpus import Corpus
 import pickle
 import warnings, logging
 from datetime import datetime
 import argparse
 from config import *
-from classes.functional import extract_paper_metadata
+from src.functional import extract_paper_metadata
 import pandas as pd
 from torch import cuda, backends, bfloat16
 

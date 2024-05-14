@@ -1,15 +1,14 @@
-from .Reference import Reference
+from src.document.reference import Reference
 import regex as re
 from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
-from classes.Affiliations import AffiliationsPipeline
-from .FoundationModel import FoundationModel
+from src.language_models.Affiliations import AffiliationsPipeline
+from src.process.FoundationModel import FoundationModel
 from datetime import datetime
-from classes.functional import implies, stemmed_basename
+from src.functional import stemmed_basename
 from typing import List, Union
 import numpy as np
-from os.path import basename
 from pydantic import BaseModel as PydanticModel
 
 
@@ -160,14 +159,6 @@ class Paper:
         
         return reference
     
-    def getAllReferences(self):
-        return [item for _, item in self.references.items()]
-    
-    def getAllTextualReferences(self, as_dict = False) -> Union[List[dict], List[Reference]]:
-        if (as_dict):
-            return [text_ref | {'paperId': basename(self.path)} for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences(as_dict = True)]
-        else:
-            return [text_ref for title, reference in self.references.items() for text_ref in reference.getAllTextualReferences()]
     
     def getNamesAndAffiliations(self, pipeline: AffiliationsPipeline) -> dict:
         self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, paperId = self.id)
