@@ -163,8 +163,8 @@ class Paper:
     def getNamesAndAffiliations(self, pipeline: LLMAffiliationsPipeline) -> dict:
         self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id)
         
-        #if (self.name_and_affiliation is None and self.preIntro is not None):
-        #    self.name_and_affiliation = pipeline.generateAsModel(input = self.preIntro)
+        if (self.name_and_affiliation is None and self.preIntro is not None):
+            self.name_and_affiliation = pipeline.generateAsModel(input = self.preIntro)
             
         return self.name_and_affiliation
     

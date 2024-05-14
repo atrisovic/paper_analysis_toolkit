@@ -29,15 +29,14 @@ def main():
     
     device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
-    bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
-                                    bnb_4bit_compute_dtype=bfloat16) 
     
     refresh = False
     try:
         assert(not refresh)
-        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device, quantization_config=bnb_config)
+        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device)
         tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH, device = device)
     except:
+        bnb_config = None if 'cuda' not in device else BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=bfloat16) 
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)
         tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
 

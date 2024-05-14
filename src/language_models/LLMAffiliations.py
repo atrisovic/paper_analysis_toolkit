@@ -1,4 +1,4 @@
-from pydantic import BaseModel as PydanticModel
+from pydantic import BaseModel as PydanticModel, conlist
 from src.language_models.FewShot import FewShotPipeline
 import logging
 from src.prompts.affiliation_prompts import PROMPT1
@@ -18,9 +18,9 @@ class Institution(PydanticModel):
     
     
 class PaperAffiliations(PydanticModel):
-    contributors: List[Contributor]
-    institutions: List[Institution]
-    countries: List[str]
+    contributors: conlist(item_type = Contributor, min_length = 1) # type: ignore
+    institutions: conlist(item_type = Institution, min_length = 1) # type: ignore
+    countries: conlist(item_type = str, min_length = 1) #type: ignore
 
 
 class LLMAffiliationsPipeline(FewShotPipeline):
