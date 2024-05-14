@@ -2,13 +2,13 @@ from transformers import AutoTokenizer, AutoModelForSequenceClassification, pipe
 from torch import cuda, backends
 from typing import Tuple
 from src.classifier.CitationClassifier import CitationClassifier
-from src.language_models.MistralCitations import MistralCitationPipeline, Classification
+from src.language_models.LLMCitations import LLMCitationPipeline, Classification
 
 
 class MistralEnhancedMulticiteClassifier(CitationClassifier):
     def __init__(self, model_checkpoint, llm_model, llm_tokenizer, device = None):    
         device = device or ('mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu')
-        self.mistral_pipeline = MistralCitationPipeline(model = llm_model, tokenizer=llm_tokenizer, device = device)
+        self.mistral_pipeline = LLMCitationPipeline(model = llm_model, tokenizer=llm_tokenizer, device = device)
 
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)

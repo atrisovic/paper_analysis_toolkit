@@ -5,10 +5,8 @@ from src.process.Corpus import Corpus
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
-from transformers import pipeline
-import os
 
-from src.language_models.Affiliations import AffiliationsPipeline, PaperAffiliations, Contributor, Institution
+from src.language_models.LLMAffiliations import LLMAffiliationsPipeline
 
 nltk.download('punkt')
 
@@ -48,7 +46,7 @@ def main():
         
 
         
-    affPipepline = AffiliationsPipeline(model  = model, tokenizer = tokenizer, device = device, resultsfile = resultsfile)
+    affPipepline = LLMAffiliationsPipeline(model  = model, tokenizer = tokenizer, device = device, resultsfile = resultsfile)
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 

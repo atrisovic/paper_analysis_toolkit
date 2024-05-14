@@ -1,6 +1,7 @@
 from pydantic import BaseModel as PydanticModel
 from src.language_models.FewShot import FewShotPipeline
-import logging, json
+import logging
+from src.prompts.affiliation_prompts import *
 from typing import List, Literal
 logger = logging.getLogger(__name__)
 
@@ -22,13 +23,15 @@ class PaperAffiliations(PydanticModel):
     countries: List[str]
 
 
-class AffiliationsPipeline(FewShotPipeline):
-    def __init__(self, model, tokenizer, device, resultsfile: str = None):
+class LLMAffiliationsPipeline(FewShotPipeline):
+    def __init__(self, model, tokenizer, device, resultsfile: str = None, prompt = PROMPT1):
+        prompt = prompt.format(schema = self.getSchema(), input = '{input}')
         super().__init__(model = model, 
                         tokenizer=tokenizer, 
                         device = device, 
                         outputClass = PaperAffiliations, 
-                        resultsfile=resultsfile)
+                        resultsfile=resultsfile,
+                        prompt = prompt)
 
     def getExamples(self):
         example_text = "# on the helpfulness of large language models\n\nbill ackendorf, Jolene baylor\n\nyuxin shu, khalid saifullah\n\nalex fogelson ({}^{\\dagger}), ana trisovic, neil thompson({}^{\\ddagger}), bob dilan\n\n({}^{\\ddagger}) new york university, massachusetts institute of technology"
@@ -65,6 +68,3 @@ class AffiliationsPipeline(FewShotPipeline):
         )
         
         return paperAffiliations.model_dump_json(indent = 1)
-    
-    def wrapInstructions(self, input: str):
-        return f"""Please read this text, and return the following information in the JSON format provided: \n{self.getSchema()}\n The output should match exactly the JSON format below. The text is as follows:\n\n {input}""" 

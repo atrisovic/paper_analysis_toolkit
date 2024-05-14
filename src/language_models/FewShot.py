@@ -15,13 +15,14 @@ class FewShotPipeline:
     pipeline: Pipeline
     examples: List[Dict]
     
-    def __init__(self, model, tokenizer, device = None, outputClass: PydanticModel = None, resultsfile: str = None):
+    def __init__(self, model, tokenizer, prompt: str, device = None, outputClass: PydanticModel = None, resultsfile: str = None):
         self.model = model
         self.tokenizer = tokenizer
         self.examples = []
         self.device = device
         self.outputParser = OutputParser(outputClass = outputClass)
         self.resultsfile = resultsfile
+        self.prompt = prompt
         
         for question, answer in self.getExamples():
             self.addExample(question=question, answer=answer)
@@ -30,9 +31,8 @@ class FewShotPipeline:
     def getExamples(self):
         return []
     
-    # Implemented in children 
     def wrapInstructions(self, input: str):
-        pass   
+        self.prompt.format(input = input)   
 
     # Save few-shot example, either as string or existing base model.
     def addExample(self, question: str, answer: Union[str, PydanticModel]):
@@ -80,7 +80,7 @@ class FewShotPipeline:
     
     
     # Iteratively generate output and force output to match a Pydantic Model.
-    def generateAsModel(self, input: str, tolerance= 5, paperId: str = None) -> PydanticModel:
+    def generateAsModel(self, input: str, tolerance= 5, identifier: str = None) -> PydanticModel:
         counter = 0
         output_object = None
         
@@ -90,13 +90,12 @@ class FewShotPipeline:
             output_object = self.outputParser.parse(results)
             
 
-        if (self.resultsfile and output_object):
-            assert(id is not None), f"Found resultsfile but paperId parameter not passed."
-            json_result = {paperId: output_object.model_dump()}
+        if (self.resultsfile and output_object and identifier):
+            json_result = {identifier: output_object.model_dump()}
             with open(self.resultsfile, 'a+') as f:
                 f.write(json.dumps(json_result) + '\n')
-        else:
-            json_result = {paperId: None}
+        elif (self.resultsfile and identifier):
+            json_result = {identifier: None}
             with open(self.resultsfile, 'a+') as f:
                 f.write(json.dumps(json_result) + '\n')
         

@@ -3,7 +3,7 @@ import regex as re
 from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
-from src.language_models.Affiliations import AffiliationsPipeline
+from src.language_models.LLMAffiliations import LLMAffiliationsPipeline
 from src.process.FoundationModel import FoundationModel
 from datetime import datetime
 from src.functional import stemmed_basename
@@ -160,7 +160,7 @@ class Paper:
         return reference
     
     
-    def getNamesAndAffiliations(self, pipeline: AffiliationsPipeline) -> dict:
+    def getNamesAndAffiliations(self, pipeline: LLMAffiliationsPipeline) -> dict:
         self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, paperId = self.id)
         
         #if (self.name_and_affiliation is None and self.preIntro is not None):

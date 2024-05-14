@@ -1,0 +1,1 @@
+PROMPT1 = """Please read this text, and return the following information in the JSON format provided: \n{schema}\n The output should match exactly the JSON format below. The text is as follows:\n\n {input}""" 
