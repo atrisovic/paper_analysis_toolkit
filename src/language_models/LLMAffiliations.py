@@ -3,6 +3,8 @@ from src.language_models.FewShot import FewShotPipeline
 import logging
 from src.prompts.affiliation_prompts import PROMPT1
 from typing import List, Literal
+from .OutputParser import OutputParser
+
 logger = logging.getLogger(__name__)
 
 
