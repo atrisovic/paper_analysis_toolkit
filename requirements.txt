@@ -7,5 +7,5 @@ seaborn
 matplotlib
 nltk
 regex
-pydantic
+pydantic >=2.7.0
 langchain

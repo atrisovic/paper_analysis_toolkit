@@ -32,7 +32,7 @@ class FewShotPipeline:
         return []
     
     def wrapInstructions(self, input: str):
-        self.prompt.format(input = input)   
+        return self.prompt.format(input = input)   
 
     # Save few-shot example, either as string or existing base model.
     def addExample(self, question: str, answer: Union[str, PydanticModel]):
@@ -65,6 +65,7 @@ class FewShotPipeline:
     # Generate using few shot prompt
     def generate(self, input: str, max_examples: int = None):
         few_shot = self.getFewShotPrompt(input, max_examples = max_examples)
+        
         encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
 
         model_inputs = encodeds.to(self.device)

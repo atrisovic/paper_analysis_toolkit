@@ -1,7 +1,7 @@
 from pydantic import BaseModel as PydanticModel
 from src.language_models.FewShot import FewShotPipeline
 import logging
-from src.prompts.affiliation_prompts import *
+from src.prompts.affiliation_prompts import PROMPT1
 from typing import List, Literal
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,12 @@ class PaperAffiliations(PydanticModel):
 
 class LLMAffiliationsPipeline(FewShotPipeline):
     def __init__(self, model, tokenizer, device, resultsfile: str = None, prompt = PROMPT1):
-        prompt = prompt.format(schema = self.getSchema(), input = '{input}')
+        
+        #need to be careful with the brackets as we pass them around!
+        prompt = prompt.format(
+                                schema = self.getSchema().replace('{', '{{').replace('}', '}}'), 
+                                input = '{input}'
+                               )
         super().__init__(model = model, 
                         tokenizer=tokenizer, 
                         device = device, 

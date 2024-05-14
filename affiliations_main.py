@@ -27,7 +27,7 @@ def main():
     resultsfile = f"results/affiliations/results_{right_now}_worker{args.index}of{args.workers}.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
-    device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
+    device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
     bnb_config = None if device != 'cuda' else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
