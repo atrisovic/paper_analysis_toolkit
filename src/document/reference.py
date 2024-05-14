@@ -1,5 +1,5 @@
 from src.document.textual_reference import TextualReference
-from src.classifier.CitationClassifier import MultiCiteClassifier
+from src.classifier.MultiCiteClassifier import MultiCiteClassifier
 from src.functional import implies
 from src.process.FoundationModel import FoundationModel
 

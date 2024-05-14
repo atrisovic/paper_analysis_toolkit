@@ -2,8 +2,6 @@ from pydantic import BaseModel as PydanticModel
 from src.language_models.FewShot import FewShotPipeline
 import logging, json
 from typing import List, Literal
-from language_models.Parser import OutputParser
-
 logger = logging.getLogger(__name__)
 
 

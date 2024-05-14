@@ -3,7 +3,7 @@ from transformers import Pipeline
 from typing import Dict, List, Union
 from transformers import Pipeline
 import json
-from language_models.Parser import OutputParser
+from src.language_models.OutputParser import OutputParser
 
 class FewShotExample(PydanticModel):
     input: str

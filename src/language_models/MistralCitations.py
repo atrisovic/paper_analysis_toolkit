@@ -1,7 +1,7 @@
 from typing import Literal
 from src.language_models.FewShot import FewShotPipeline
 from pydantic import BaseModel as PydanticModel
-from src.language_models.Parser import OutputParser
+from src.language_models.OutputParser import OutputParser
 
     
 class Classification(PydanticModel):
