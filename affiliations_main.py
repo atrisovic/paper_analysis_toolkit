@@ -6,7 +6,9 @@ from datetime import datetime
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
 
-from src.language_models.LLMAffiliations import LLMAffiliationsPipeline
+from src.language_models.LLMFullAffiliations import LLMFullAffiliationsPipepline
+from src.language_models.LLMInstitutions import LLMInstitutions
+from src.prompts.affiliation_prompts import PROMPT3
 
 nltk.download('punkt')
 
@@ -27,15 +29,14 @@ def main():
     resultsfile = f"results/affiliations/results_{right_now}_worker{args.index}of{args.workers}.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
-    device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
+    device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
     
     refresh = False
-    try:
-        assert(not refresh)
+    if (not refresh):
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device)
         tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH, device = device)
-    except:
+    else:
         bnb_config = None if 'cuda' not in device else BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=bfloat16) 
         model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)
         tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
@@ -43,9 +44,22 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
         
+    print(f"CUDA Memory: {cuda.memory_allocated()}")
+        
 
         
-    affPipepline = LLMAffiliationsPipeline(model  = model, tokenizer = tokenizer, device = device, resultsfile = resultsfile)
+    # affPipepline = LLMFullAffiliationsPipepline(model  = model, 
+    #                                        tokenizer = tokenizer, 
+    #                                        device = device, 
+    #                                        resultsfile = resultsfile,
+    #                                        prompt = PROMPT1,
+    #                                        strict = False)
+    affPipepline = LLMInstitutions(model  = model, 
+                                            tokenizer = tokenizer, 
+                                            device = device, 
+                                            resultsfile = resultsfile,
+                                            prompt = PROMPT3,
+                                            debug = args.debug)
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 

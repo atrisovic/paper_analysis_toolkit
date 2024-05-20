@@ -18,10 +18,11 @@ class OutputParser:
         return text
     
     
-    def stripJSON(self, text: Optional[str]) -> Optional[dict]:
+    def stripJSON(self, text: Optional[str], added_bracket = False) -> Optional[dict]:
         if (text is None):
             return None
         
+        text = text.replace('\(', '(').replace('\)', ')') #Mistral likes to add escape sequences, for some unknown reason
         # a very manual way of finding our JSON string within the output
         all_open_brackets = [i for i, ltr in enumerate(text) if ltr == '{']
         obj = None
@@ -37,6 +38,10 @@ class OutputParser:
                     break
             if (obj is not None):
                 break
+            
+        # sometimes we miss the first or last bracket (dumb LLM), so we add it manually.
+        if not added_bracket:
+            return (self.stripJSON('{' + text, added_bracket = True) or self.stripJSON(text + '}', added_bracket = True))
             
         return obj
     
@@ -55,4 +60,3 @@ class OutputParser:
         model = self.stripModel(json_obj)
         
         return model
-                    

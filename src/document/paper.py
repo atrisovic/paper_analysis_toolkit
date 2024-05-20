@@ -3,7 +3,7 @@ import regex as re
 from typing import List, Dict, Union
 from nltk.tokenize import sent_tokenize
 import logging
-from src.language_models.LLMAffiliations import LLMAffiliationsPipeline
+from src.language_models.FewShot import FewShotPipeline
 from src.process.FoundationModel import FoundationModel
 from datetime import datetime
 from src.functional import stemmed_basename
@@ -160,12 +160,22 @@ class Paper:
         return reference
     
     
-    def getNamesAndAffiliations(self, pipeline: LLMAffiliationsPipeline) -> dict:
-        self.name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id)
+    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:
+        name_and_affiliation = (
+                                        pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id)
+                                        or pipeline.generateAsModel(input = self.preIntro, identifier = self.id, last_attempt=True)
+        )
         
-        if (self.name_and_affiliation is None and self.preIntro is not None):
-            self.name_and_affiliation = pipeline.generateAsModel(input = self.preIntro)
-            
+        '''window_size, step_size, total_steps = 10, 5, 10
+        content_lines = self.getContent().split('\n')
+        for i in range(total_steps):
+            if name_and_affiliation is None:
+                last_iter = (i == total_steps - 1)
+                window = '\n'.join(content_lines[step_size*i: step_size * i + window_size]) #little wasteful but prettier 
+                logger.debug(f"Running on window of length ({len(window)}) for paperId = {self.id}.")
+                name_and_affiliation = pipeline.generateAsModel(input = window, identifier = self.id, tolerance = 1, last_attempt=last_iter) #this self.id ref might cause a dependency cyle, which is not immediately gc'd
+        '''
+        self.name_and_affiliation = name_and_affiliation
         return self.name_and_affiliation
     
     def getGenericHeadingCheckerFunction(self, *args):    

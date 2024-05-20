@@ -2,8 +2,9 @@ from src.document.paper import Paper, ReferenceSectionCountException
 from src.classifier.CitationClassifier import CitationClassifier
 from src.document.reference import Reference
 from src.process.FoundationModel import FoundationModel
-from src.language_models.LLMAffiliations import LLMAffiliationsPipeline
+from src.language_models.LLMFullAffiliations import LLMFullAffiliationsPipepline
 from src.functional import clusterOrLimitList, stemmed_basename
+from gc import collect
 
 from typing import List, Tuple, Dict
 from tqdm import tqdm
@@ -117,7 +118,8 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def getAllAffiliations(self, pipeline: LLMAffiliationsPipeline):
+    def getAllAffiliations(self, pipeline: LLMFullAffiliationsPipepline):
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
             paper.getNamesAndAffiliations(pipeline=pipeline)
+            collect()

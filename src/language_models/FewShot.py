@@ -15,14 +15,24 @@ class FewShotPipeline:
     pipeline: Pipeline
     examples: List[Dict]
     
-    def __init__(self, model, tokenizer, prompt: str, device = None, outputClass: PydanticModel = None, resultsfile: str = None):
+    def __init__(self, 
+                 model, 
+                 tokenizer, 
+                 prompt: str, 
+                 device = None, 
+                 outputClass: PydanticModel = None, 
+                 resultsfile: str = None,
+                 debug: bool = True):
+        
         self.model = model
         self.tokenizer = tokenizer
         self.examples = []
         self.device = device
+        self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass)
         self.resultsfile = resultsfile
         self.prompt = prompt
+        self.debug = debug
         
         for question, answer in self.getExamples():
             self.addExample(question=question, answer=answer)
@@ -76,12 +86,15 @@ class FewShotPipeline:
                                             do_sample=True, 
                                             temperature=.5)
         decoded = self.tokenizer.batch_decode(generated_ids)[0]
-    
+            
         return decoded
     
     
     # Iteratively generate output and force output to match a Pydantic Model.
-    def generateAsModel(self, input: str, tolerance= 5, identifier: str = None) -> PydanticModel:
+    def generateAsModel(self, input: str, tolerance=5, identifier: str = None, last_attempt = False) -> PydanticModel:
+        if input is None: #helpful when iterating through potential sections
+            return None
+        
         counter = 0
         output_object = None
         
@@ -91,12 +104,8 @@ class FewShotPipeline:
             output_object = self.outputParser.parse(results)
             
 
-        if (self.resultsfile and output_object and identifier):
-            json_result = {identifier: output_object.model_dump()}
-            with open(self.resultsfile, 'a+') as f:
-                f.write(json.dumps(json_result) + '\n')
-        elif (self.resultsfile and identifier):
-            json_result = {identifier: None}
+        if (self.resultsfile and identifier and (last_attempt or output_object)):
+            json_result = {identifier: output_object.model_dump() if output_object else results if self.debug else None}
             with open(self.resultsfile, 'a+') as f:
                 f.write(json.dumps(json_result) + '\n')
         
