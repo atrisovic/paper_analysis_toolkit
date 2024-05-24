@@ -2,6 +2,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from torch import backends, cuda, bfloat16
 
 from src.process.Corpus import Corpus
+from src.process.Cluster import Cluster
 from datetime import datetime 
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import nltk, logging, argparse
@@ -20,9 +21,12 @@ def main():
     parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of documents scanned.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
+    parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
     parser.add_argument('--eagerstorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading documents.")
 
     args = parser.parse_args()
+    
+    cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
     
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/affiliations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
@@ -43,9 +47,7 @@ def main():
 
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
-        
-    print(f"CUDA Memory: {cuda.memory_allocated()}")
-        
+                
 
         
     # affPipepline = LLMFullAffiliationsPipepline(model  = model, 
@@ -54,6 +56,7 @@ def main():
     #                                        resultsfile = resultsfile,
     #                                        prompt = PROMPT1,
     #                                        strict = False)
+    
     affPipepline = LLMInstitutions(model  = model, 
                                             tokenizer = tokenizer, 
                                             device = device, 
@@ -63,8 +66,7 @@ def main():
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
-                        cluster_info = (args.index, args.workers), 
-                        paper_limit = args.limit, 
+                        cluster = cluster,
                         filter_path = args.filter_file,
                         lazy = not args.eagerstorage,
                         confirm_paper_ref_sections=False)

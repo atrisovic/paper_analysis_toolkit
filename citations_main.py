@@ -4,7 +4,9 @@ from src.analysis.Agglomerator import RankedClassificationCountsYearly, RankedCl
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from src.process.FoundationModel import FoundationModel
 from src.process.Corpus import Corpus
-import pickle
+from src.process.Cluster import Cluster
+
+
 import warnings, logging
 from datetime import datetime
 import argparse
@@ -23,7 +25,11 @@ def main():
     parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of foundation models analyzed.')
     parser.add_argument('-f', '--filter_file', type = str, help = 'A list of files to be included in the corpus (others from directory will be discarded).')
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
+    parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
     parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading classes.")
+    
+    cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
+
 
     args = parser.parse_args()
     
@@ -60,8 +66,7 @@ def main():
     
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
-                        cluster_info = (args.index, args.workers), 
-                        foundation_model_limit = args.limit, 
+                        cluster = cluster,
                         filter_path=args.filter_file, 
                         lazy = args.lazystorage,
                         paper_years=extract_paper_metadata(OPEN_ACCESS_PAPER_XREF)

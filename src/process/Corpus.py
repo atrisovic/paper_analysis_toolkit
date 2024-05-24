@@ -3,13 +3,16 @@ from src.classifier.CitationClassifier import CitationClassifier
 from src.document.reference import Reference
 from src.process.FoundationModel import FoundationModel
 from src.language_models.LLMFullAffiliations import LLMFullAffiliationsPipepline
-from src.functional import clusterOrLimitList, stemmed_basename
+from src.functional import stemmed_basename
+from src.process.Cluster import Cluster
+
 from gc import collect
 
 from typing import List, Tuple, Dict
 from tqdm import tqdm
 from os import walk
 from os.path import join, basename
+
 
 import pandas as pd, logging
 
@@ -21,17 +24,14 @@ logger = logging.getLogger(__name__)
 class Corpus:
     def __init__(self, directory: str, 
                         extensions: List[str], 
-                        foundation_model_limit: int = None, 
-                        paper_limit: int = None,
-                        cluster_info: Tuple[int, int] = None, 
+                        cluster: Cluster,
+                        cluster_foundation_models: bool = False,
                         filter_path: str = None,
                         lazy: bool = False,
                         confirm_paper_ref_sections: bool = True,
                         paper_years: Dict[str, int] = None):
         
-        self.paper_limit: int = paper_limit
-        self.foundation_model_limit: int = foundation_model_limit
-        self.cluster_info: Tuple[int, int] = cluster_info
+        self.cluster: Cluster = cluster
         self.directory: str = directory
         self.extensions: List[str] = extensions
         self.filter_path: str = filter_path
@@ -58,7 +58,7 @@ class Corpus:
         logger.info(f"Found {len(all_file_paths)} files (filter_path set to {self.filter_path}).")
             
             
-        all_file_paths = clusterOrLimitList(all_file_paths, self.cluster_info, self.paper_limit)
+        all_file_paths = self.cluster.clusterList(all_file_paths)
         
         logger.info(f"Loading {len(all_file_paths)} files as Paper objects." )
 
@@ -97,8 +97,6 @@ class Corpus:
     def findAllReferencesAllModels(self, models = List[FoundationModel],
                                         classifier: CitationClassifier = None,
                                         resultsfile: str = None):
-        
-        models = clusterOrLimitList(L = models, cluster_info = None, limit = self.foundation_model_limit)        
 
         logger.info(f"Finding references to {len(models)} foundation models in corpus {'and' if classifier else 'without'} classifying sentences.")
         header = True

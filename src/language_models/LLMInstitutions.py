@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
     
 class Institution(PydanticModel):
     name: constr(min_length = 1) # type: ignore
-    type: Literal['academic','industry','research']
+    type: constr(min_length = 1) #type:ignore #Literal['academic','industry','research']
     country: constr(min_length = 1) #type: ignore
     
     

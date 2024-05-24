@@ -18,24 +18,6 @@ def implies(a: bool, b: bool) -> bool:
 def title_from_path(path:str):
         id = path.split('/')[-1].replace('.mmd','')
         return id_to_title.get(id)
-    
-def clusterOrLimitList(L: list, cluster_info: Tuple[int, int] = None, limit: int = None):
-    if (not limit and not cluster_info):
-        return L
-
-    random.seed(0)
-    random.shuffle(L) #need consistency accross jobs
-    
-    L = L[:limit or len(L)]
-        
-    if cluster_info:
-        cluster_index, cluster_count = cluster_info
-        chunk_length = ceil(len(L)/cluster_count)
-    
-        L = L[chunk_length * (cluster_index - 1): chunk_length * cluster_index] #cluster_index is one-indexed
-
-    return L
-
 
 def extract_paper_metadata(path: str):
     paper_years = {}
@@ -48,3 +30,22 @@ def extract_paper_metadata(path: str):
 
 def get_device():
     return 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
+
+def load_affiliations_results(path: str):
+    with open(path, 'r') as f: 
+        dicts = map(json.loads, f.readlines())
+        return {k:v for d in dicts for k, v in d.items()}
+    
+def merge_affiliation_results(*args):
+    result_sets = list(map(load_affiliations_results, args))
+    all_keys = {key for result in result_sets for key in result}
+    
+    
+    chosen_values = {}
+    for key in all_keys:
+        dict_values = filter(lambda s: isinstance(s, dict), [result.get(key) for result in result_sets])
+        string_values = filter(lambda s: isinstance(s, str), [result.get(key) for result in result_sets])
+
+        chosen_values[key] = next(iter(dict_values), None) or next(iter(string_values), None)
+        
+    return chosen_values

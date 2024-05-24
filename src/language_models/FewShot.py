@@ -74,6 +74,9 @@ class FewShotPipeline:
     
     # Generate using few shot prompt
     def generate(self, input: str, max_examples: int = None):
+        if (len(input) > 5000):
+            return ''
+        
         few_shot = self.getFewShotPrompt(input, max_examples = max_examples)
         
         encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
@@ -91,14 +94,10 @@ class FewShotPipeline:
     
     
     # Iteratively generate output and force output to match a Pydantic Model.
-    def generateAsModel(self, input: str, tolerance=5, identifier: str = None, last_attempt = False) -> PydanticModel:
-        if input is None: #helpful when iterating through potential sections
-            return None
-        
-        counter = 0
-        output_object = None
-        
-        while counter < tolerance and not output_object:
+    def generateAsModel(self, input: str, tolerance = 5, identifier: str = None, last_attempt = False) -> PydanticModel:
+        counter, results, output_object = 0, None, None
+   
+        while counter < tolerance and not output_object and input is not None:
             counter += 1
             results = self.generate(input = input)
             output_object = self.outputParser.parse(results)

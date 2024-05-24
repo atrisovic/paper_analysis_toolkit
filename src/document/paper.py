@@ -112,10 +112,10 @@ class Paper:
         paper_title = re.sub(r'#','', first_line)
         self.title = paper_title   
         
-        match = re.search(r'#+\s?abstract', content)
+        match = re.search(r'#+\s*\d*\s*abstract', content)
         self.pre_abstract = None if match is None else content[:match.start()]
         
-        match = re.search(r'#+\s?introduction', content)
+        match = re.search(r'#+\s*\d*\s*introduction', content)
         self.preIntro = None if match is None else content[:match.start()]
         
 
@@ -160,11 +160,10 @@ class Paper:
         return reference
     
     
-    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:
-        name_and_affiliation = (
-                                        pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id)
-                                        or pipeline.generateAsModel(input = self.preIntro, identifier = self.id, last_attempt=True)
-        )
+    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:        
+        name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id, last_attempt = not(self.preIntro))
+        if (self.preIntro and not name_and_affiliation):
+            name_and_affiliation = pipeline.generateAsModel(input = self.preIntro, identifier = self.id, last_attempt=True)
         
         '''window_size, step_size, total_steps = 10, 5, 10
         content_lines = self.getContent().split('\n')
@@ -175,6 +174,8 @@ class Paper:
                 logger.debug(f"Running on window of length ({len(window)}) for paperId = {self.id}.")
                 name_and_affiliation = pipeline.generateAsModel(input = window, identifier = self.id, tolerance = 1, last_attempt=last_iter) #this self.id ref might cause a dependency cyle, which is not immediately gc'd
         '''
+        
+        
         self.name_and_affiliation = name_and_affiliation
         return self.name_and_affiliation
     
