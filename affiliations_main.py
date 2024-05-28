@@ -58,11 +58,11 @@ def main():
     #                                        strict = False)
     
     affPipepline = LLMInstitutions(model  = model, 
-                                            tokenizer = tokenizer, 
-                                            device = device, 
-                                            resultsfile = resultsfile,
-                                            prompt = PROMPT3,
-                                            debug = args.debug)
+                                    tokenizer = tokenizer, 
+                                    device = device, 
+                                    resultsfile = resultsfile,
+                                    prompt = PROMPT3,
+                                    debug = args.debug)
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 

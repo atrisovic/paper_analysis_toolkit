@@ -9,5 +9,5 @@ class Classification(PydanticModel):
     classification: Literal['uses', 'extends', 'background', 'motivation', 'future_work', 'differences']
     
 class LLMCitationPipeline(FewShotPipeline):
-    def __init__(self, model, tokenizer, device = None, prompt: str = PROMPT1):
+    def __init__(self, model, tokenizer, prompt: str, device = None):
         super().__init__(model = model, tokenizer=tokenizer, device=device, prompt = prompt, outputClass=Classification)
