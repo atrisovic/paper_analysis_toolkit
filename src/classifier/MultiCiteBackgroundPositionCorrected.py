@@ -4,7 +4,7 @@ from src.classifier.CitationClassifier import CitationClassifier
 
 
 
-class MultiCiteExtendedClassifider(CitationClassifier):
+class MultiCiteBackgroundPositionCorrected(CitationClassifier):
     def __init__(self, model_checkpoint):
         tokenizer = AutoTokenizer.from_pretrained(model_checkpoint, model_max_length = 512)
         model = AutoModelForSequenceClassification.from_pretrained(model_checkpoint)

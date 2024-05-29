@@ -1,4 +1,4 @@
-from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifierBackgroundTuned
+from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifier
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from src.prompts.citation_prompts import PROMPT2
 from tqdm import tqdm
@@ -30,12 +30,13 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
       
-    classifier = MistralEnhancedMulticiteClassifierBackgroundTuned(model_checkpoint=CITATION_MODEL_PATH,
+    classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,
                                                     llm_model=model,llm_tokenizer=tokenizer, 
                                                     device=device, 
-                                                    prompt = PROMPT2)
+                                                    prompt = PROMPT2,
+                                                    mc_uses_extends=True)
         
-    results_path =  '/home/gridsan/afogelson/osfm/scripts/urop_samples/uniform_sample/uniform_urop_sample_all_labels'
+    results_path =  '/home/gridsan/afogelson/osfm/scripts/urop_samples/uniform_sample/uniform_urop_sample_labeled'
     df = pd.read_csv(results_path + '.csv')
     
     classifications = [classifier.classify_text(sentence) for sentence in tqdm(df['sentence'])]
