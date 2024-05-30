@@ -1,6 +1,5 @@
 from src.classifier.MultiCiteClassifier import MultiCiteClassifier
 from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifier
-from src.analysis.Agglomerator import RankedClassificationCountsYearly, RankedClassificationCounts
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from src.process.FoundationModel import FoundationModel
 from src.process.Corpus import Corpus
@@ -28,11 +27,9 @@ def main():
     parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
     parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
     parser.add_argument('--lazystorage', action = 'store_true', help = "Adding this flag will decrease RAM usage but increase runtime when rereading classes.")
-    
-    cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
-
 
     args = parser.parse_args()
+    cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
     
     assert(args.limit is None or args.workers <= args.limit)
     
