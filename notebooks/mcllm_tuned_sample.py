@@ -31,14 +31,14 @@ def main():
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
       
     classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,
-                                                    llm_model=model,llm_tokenizer=tokenizer, 
+                                                    llm_model=model,
+                                                    llm_tokenizer=tokenizer, 
                                                     device=device, 
                                                     prompt = PROMPT2,
                                                     mc_uses_extends=True)
         
     results_path =  '/home/gridsan/afogelson/osfm/scripts/urop_samples/uniform_sample/uniform_urop_sample_labeled'
     df = pd.read_csv(results_path + '.csv')
-    
     classifications = [classifier.classify_text(sentence) for sentence in tqdm(df['sentence'])]
     df['mcllm_tuned'] = classifications
     df.to_csv(results_path + '_augmented.csv')   

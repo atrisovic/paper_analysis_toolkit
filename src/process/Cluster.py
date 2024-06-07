@@ -12,12 +12,7 @@ class Cluster:
     
     def clusterList(self, L: list):
         random.seed(self.seed)
+        L.sort()
         random.shuffle(L) #need consistency accross jobs
-        
-        L = L[:self.limit]
             
-        chunk_length = ceil(len(L)/self.worker_count)
-        
-        L = L[chunk_length * (self.index - 1): chunk_length * self.index] #cluster_index is one-indexed
-
-        return L
+        return L[self.index - 1: self.limit : self.worker_count] #cluster_index is one-indexed
