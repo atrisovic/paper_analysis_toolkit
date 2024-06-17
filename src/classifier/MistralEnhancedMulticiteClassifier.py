@@ -5,7 +5,10 @@ from src.classifier.CitationClassifier import CitationClassifier
 from src.language_models.LLMCitations import LLMCitationPipeline, Classification
 from src.language_models.LLMBinaryCitations import LLMBinaryCitationPipeline, BinaryClassification
 from src.prompts.citation_prompts import PROMPT1, PROMPT3
+from torch.cuda import OutOfMemoryError
+import logging
 
+logger = logging.getLogger(__name__)
 
 class MistralEnhancedMulticiteClassifier(CitationClassifier):
     def __init__(self, model_checkpoint, llm_model, llm_tokenizer, device = None, prompt: str = PROMPT1, mc_uses_extends = False):    
@@ -19,6 +22,7 @@ class MistralEnhancedMulticiteClassifier(CitationClassifier):
         
     def classify_text(self, text, *args) -> Tuple[str, float]:
         results = self.multicite_classifier(text, truncation = True)
+
         as_dictionary = {result['label']: result['score'] for result in results}
 
         best_label = max(as_dictionary, key=as_dictionary.get)
@@ -45,6 +49,10 @@ class MistralEnhancedMulticiteClassifierBinary(CitationClassifier):
         self.multicite_classifier = pipeline('text-classification', model=model, tokenizer=tokenizer, device = device)
         
     def classify_text(self, text, *args) -> Tuple[str, float]:
+        llm_label: BinaryClassification = self.mistral_pipeline.generateAsModel(input = text)
+        return None if llm_label is None else (llm_label.classification, llm_label.explanation)
+    
+    
         results = self.multicite_classifier(text, truncation = True)
         as_dictionary = {result['label']: result['score'] for result in results}
 
@@ -52,11 +60,11 @@ class MistralEnhancedMulticiteClassifierBinary(CitationClassifier):
         
         if (best_label in ('uses', 'extends')):
             llm_label: BinaryClassification = self.mistral_pipeline.generateAsModel(input = text)
-            if (llm_label is not None and llm_label.context):
-                return 'context'
+            if (llm_label is not None):
+                return (llm_label.classification, llm_label.explanation)
         
         return best_label
     
     def getClassificationOrdering(self):
-        return ['extends', 'uses', 'context']
+        return ['uses', 'context']
     

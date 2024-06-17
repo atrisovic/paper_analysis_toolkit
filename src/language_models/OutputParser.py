@@ -3,9 +3,11 @@ import json
 from typing import Optional
 
 
+
 class OutputParser:
-    def __init__(self, outputClass: PydanticModel):
+    def __init__(self, outputClass: PydanticModel, logfile = None):
         self.outputClass = outputClass
+        self.logfile = logfile
     
     def stripOutput(self, text: str, begin_token: str = '[/INST]', end_token = '</s>'):
         begin_index = text.rfind(begin_token)
@@ -55,8 +57,12 @@ class OutputParser:
             return None
         
     def parse(self, text: str) -> Optional[PydanticModel]:
-        output = self.stripOutput(text)
+        output = self.stripOutput(text)  
         json_obj = self.stripJSON(output)
         model = self.stripModel(json_obj)
+        
+        if (self.logfile):
+            with open(self.logfile, 'a') as f:
+                f.write(f'''As output:"{output}"\nAs JSON: {json_obj}\nAs model {model}\n\n''')
         
         return model

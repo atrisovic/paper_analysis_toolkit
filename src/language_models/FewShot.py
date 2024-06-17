@@ -4,6 +4,11 @@ from typing import Dict, List, Union
 from transformers import Pipeline
 import json
 from src.language_models.OutputParser import OutputParser
+import logging
+from torch.cuda import OutOfMemoryError
+
+logger = logging.getLogger(__name__)
+
 
 class FewShotExample(PydanticModel):
     input: str
@@ -29,7 +34,8 @@ class FewShotPipeline:
         self.examples = []
         self.device = device
         self.outputClass = outputClass
-        self.outputParser = OutputParser(outputClass = outputClass)
+        self.outputParser = OutputParser(outputClass = outputClass, 
+                                         logfile = '/home/gridsan/afogelson/osfm/paper_analysis_toolkit/temp.log')
         self.resultsfile = resultsfile
         self.prompt = prompt
         self.debug = debug
@@ -73,10 +79,7 @@ class FewShotPipeline:
         return few_shots
     
     # Generate using few shot prompt
-    def generate(self, input: str, max_examples: int = None):
-        if (len(input) > 5000):
-            return ''
-        
+    def generate(self, input: str, max_examples: int = None):        
         few_shot = self.getFewShotPrompt(input, max_examples = max_examples)
         
         encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
@@ -89,6 +92,7 @@ class FewShotPipeline:
                                             do_sample=True, 
                                             temperature=.5)
         decoded = self.tokenizer.batch_decode(generated_ids)[0]
+        
             
         return decoded
     
@@ -99,7 +103,13 @@ class FewShotPipeline:
    
         while counter < tolerance and not output_object and input is not None:
             counter += 1
-            results = self.generate(input = input)
+            try:
+                results = self.generate(input = input)
+            except OutOfMemoryError as e:
+                logger.info(f"Ran out of memory with input of size: {len(input)} on iteration {counter + 1} of {tolerance}. Input:\n{input}")
+                output_object = None
+                break
+            
             output_object = self.outputParser.parse(results)
             
 

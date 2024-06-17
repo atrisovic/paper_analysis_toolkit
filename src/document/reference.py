@@ -9,7 +9,7 @@ import regex as re
 
 
 class Reference:
-    def __init__(self, model: FoundationModel, paperId: str):
+    def __init__(self, model: FoundationModel, paperId: str, context_size = 3):
         self.model: FoundationModel = model
         self.paperId: str = paperId
         
@@ -20,6 +20,7 @@ class Reference:
         self.duplicative_citation: bool = None
         self.reference_exists: bool = None
         self.missing_page_fail: bool = None
+        self.context_size = context_size
         
     def __repr__(self):
         return f"Title: {self.model.title}, Citation: '{self.citations}', missing_citation: {self.missing_citation}"
@@ -64,14 +65,21 @@ class Reference:
         return False
     
     def getTextualReferencesFromSentences(self, all_sentences: Dict[str, Set[str]]) -> List[str]:
-        if self.citations is None:
+        if self.citations is None or len(all_sentences) == 0:
             self.textualReferences = []
             return
         
+        safe_index = lambda input_list, index: input_list[index] if index in range(0, len(input_list)) else ''
+        window_iterator = lambda input_list, size: ([safe_index(input_list, k) for k in range(index - (size//2), index + (size//2) + (size % 2))] for index in range(len(input_list)))
+        
+        sentences, labels = zip(*all_sentences.items())
+        
+        main_idx = self.context_size//2
         self.textualReferences = []
-        for sentence, labels in all_sentences.items(): 
-            if self.checkCitationInSentence(sentence):
-                newTextRef = TextualReference(self.addCitationBrackets(sentence), labels=labels) 
+        for sentences, labels in zip(window_iterator(sentences, self.context_size), labels):
+            if self.checkCitationInSentence(sentences[main_idx]):
+                sentences[main_idx] = self.addCitationBrackets(sentences[main_idx])
+                newTextRef = TextualReference(' '.join(sentences), labels=labels) 
                 self.textualReferences.append(newTextRef)
         
         return self.textualReferences

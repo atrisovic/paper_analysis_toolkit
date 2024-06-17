@@ -6,7 +6,8 @@ from src.prompts.citation_prompts import *
 
     
 class BinaryClassification(PydanticModel):
-    context: bool
+    explanation: str
+    classification: Literal['uses', 'context', 'unclear']
     
 class LLMBinaryCitationPipeline(FewShotPipeline):
     def __init__(self, model, tokenizer, prompt: str, device = None):

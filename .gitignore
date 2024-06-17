@@ -15,3 +15,5 @@ version.txt
 saved_models/*
 nltk_data/*
 results/*
+job_logs/*
+logs/*

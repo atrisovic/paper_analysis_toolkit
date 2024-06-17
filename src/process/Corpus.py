@@ -89,7 +89,7 @@ class Corpus:
         return good_papers, bad_papers
   
     def findAllReferencesForModel(self, model: FoundationModel, classifier: CitationClassifier):
-        logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}.). Classification is turned {'on' if classifier else 'off'}.")
+        logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}).{ 'Classification is turned off.' if not classifier else ''}")
         for paper in self.papers:
             paper.getReferenceFromTitle(model = model, classifier = classifier)
         logger.info(f"References successfully saved to underlying paper objects.")
