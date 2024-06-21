@@ -52,3 +52,24 @@ We'd like to discern how the CITING paper makes use of the foundation model with
 4) Is the CITED model used as a reference point in the methodology for comparison, but not for usage?
 
 Using these answers as guidance, please response in this JSON format with two fields: an explanation including relevant answers to our step-by-step reasoning, and the final classification. The format is as follows: {{"explanation": "The citation indicates..." , "classification": "context | uses" }}, classifying based on the following:\n {input}""" 
+
+
+PROMPT8 = """The following sentences are from an academic paper (the CITING paper) which references a pretrained machine learning model through citation (the CITED paper). The models are called foundation models, and they might be a language model, a vision model, or any other kind of large neural network. The CITED paper is highlighed using HTML tags as such: <cite> cited reference </cite>. All other citations can be ignored, as we only care about the cited reference with these tags.
+
+We'd like to discern how the CITING paper makes use of the foundation model within the sentences. Below are ten statements, which will be evaluated as either true or false.
+
+1. The CITING sentences use the results of the CITED paper to support background claims.
+2. The CITING sentences use the techniques of the CITED paper to provide relevant context.
+3. The CITING sentences display performance results of the CITED paper.
+4. The CITING paper uses the CITED foundation model's encoder or decoder.
+5. The CITING paper uses the CITED foundation model to create embeddings.
+6. The CITING paper further fine-tuned or adjusts the weights of the CITED foundation model. 
+7. The CITING paper recreates the CITED foundation model's architecture.
+8. The CITING paper trains a model using the CITED paper's dataset.
+9. The CITING paper uses the CITED foundation model for feature extraction.
+10. The CITING paper uses the CITED foundation model as a classifier.
+11. The CITING paper uses the CITED foundation model to generate text/image/audio/video samples.
+12. The CITING paper uses the CITED foundation model as a backbone model.
+
+
+Please response in this JSON format: {{"1": "True | False" , "2": "True | False", "3": "True | False", ... , "11": "True | False"}}, classifying based on the following:\n {input}""" 

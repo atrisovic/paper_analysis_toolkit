@@ -1,6 +1,6 @@
-from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifierBinary
+from src.classifier.MistralEnhancedMulticiteClassifier import MistralEnhancedMulticiteClassifierFreeform
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from src.prompts.citation_prompts import PROMPT7
+from src.prompts.citation_prompts import PROMPT8
 from tqdm import tqdm
 
 import warnings, logging
@@ -33,11 +33,11 @@ def main():
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
       
-    classifier = MistralEnhancedMulticiteClassifierBinary(model_checkpoint=CITATION_MODEL_PATH,
+    classifier = MistralEnhancedMulticiteClassifierFreeform(model_checkpoint=CITATION_MODEL_PATH,
                                                     llm_model=model,
                                                     llm_tokenizer=tokenizer, 
                                                     device=device, 
-                                                    prompt = PROMPT7)
+                                                    prompt = PROMPT8)
         
     results_path =  '/home/gridsan/afogelson/osfm/scripts/urop_samples/uniform_sample/uniform_urop_sample_alex_labeled'
     df = pd.read_csv(results_path + '.csv')
@@ -50,7 +50,7 @@ def main():
             classifications.append(None)
 
     df['mcllm_binary'] = classifications
-    df.to_csv(results_path + '_PROMPT7.csv')   
+    df.to_csv(results_path + '_PROMPT8.csv')   
 
         
 if __name__ == '__main__':
