@@ -26,15 +26,15 @@ class ChatInterface:
 
     
     # Generate using few shot prompt
-    def generate(self, input: str, max_new_tokens = 5000, temperature = 1):                
-        encodeds = self.tokenizer.apply_chat_template(input, return_tensors="pt")
+    def generate(self, input: str, max_new_tokens = 5000, temperature = 1):        
+        encodeds = self.tokenizer.apply_chat_template([{"role": "user", "content": input}], return_tensors="pt")
 
         model_inputs = encodeds.to(self.device)
 
         generated_ids = self.model.generate(model_inputs, 
                                             max_new_tokens=max_new_tokens, 
                                             pad_token_id = self.tokenizer.eos_token_id, 
-                                            do_sample=True, 
+                                            do_sample=False, 
                                             temperature=temperature)
         decoded = self.tokenizer.batch_decode(generated_ids)[0]
         

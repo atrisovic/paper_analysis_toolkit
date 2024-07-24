@@ -5,7 +5,7 @@ from src.prompts.citation_prompts import PROMPT2
 from config import *
 from torch import cuda, backends, bfloat16
 
-def load_model():
+def load_models():
     device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
 
@@ -28,7 +28,7 @@ def load_model():
 def load_classifier(prompt):    
     device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
 
-    model, tokenizer = load_model()
+    model, tokenizer = load_models()
 
     classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,
                                                     llm_model=model,
