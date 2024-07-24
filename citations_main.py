@@ -2,7 +2,7 @@ from src.process.FoundationModel import FoundationModel
 from src.process.Corpus import Corpus
 from src.process.Cluster import Cluster
 from src.prompts.citation_prompts import PROMPT2
-from load_classifier import load_classifier
+from load_models import load_classifier
 
 import warnings, logging
 from datetime import datetime

@@ -3,12 +3,11 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from src.prompts.citation_prompts import PROMPT2
 
 from config import *
-from torch import cuda, backends, bfloat16    
+from torch import cuda, backends, bfloat16
 
-def load_classifier(prompt):    
+def load_model():
     device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
     print(f"Using device = {device}")
-
 
     bnb_config = None if device.find('cuda') == 0 else BitsAndBytesConfig(load_in_4bit=True,
                                     bnb_4bit_compute_dtype=bfloat16) 
@@ -22,6 +21,14 @@ def load_classifier(prompt):
         tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
         model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
         tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
+        
+    return model, tokenizer
+
+
+def load_classifier(prompt):    
+    device = 'mps' if backends.mps.is_available() else 'cuda:0' if cuda.is_available() else 'cpu'
+
+    model, tokenizer = load_model()
 
     classifier = MistralEnhancedMulticiteClassifier(model_checkpoint=CITATION_MODEL_PATH,
                                                     llm_model=model,

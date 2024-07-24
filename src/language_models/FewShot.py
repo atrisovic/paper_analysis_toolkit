@@ -1,7 +1,5 @@
 from pydantic import BaseModel as PydanticModel
-from transformers import Pipeline
 from typing import Dict, List, Union
-from transformers import Pipeline
 import json
 from src.language_models.OutputParser import OutputParser
 import logging
@@ -17,7 +15,6 @@ class FewShotExample(PydanticModel):
     
     
 class FewShotPipeline:
-    pipeline: Pipeline
     examples: List[Dict]
     
     def __init__(self, 
