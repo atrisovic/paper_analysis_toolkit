@@ -73,3 +73,39 @@ We'd like to discern how the CITING paper makes use of the foundation model with
 
 
 Please response in this JSON format: {{"1": "True | False" , "2": "True | False", "3": "True | False", ... , "11": "True | False"}}, classifying based on the following:\n {input}""" 
+
+
+
+GENERIC_PROMPT = ("""The following sentences are from an academic paper (the CITING paper) which references a pretrained machine learning model through citation (the CITED paper). The models are called foundation models, and they might be a language model, a vision model, or any other kind of large neural network. The CITED paper is highlighed using HTML tags as such: <cite> cited reference </cite>. All other foundation models can be ignored, as we only care about the model cited with these tags. If it's helpful, the model identifier of the CITED model is {{modelKey}}. 
+
+We'd like to discern how the CITING paper makes use of the foundation model, as described within the sentences. {question_statement}
+
+\n
+We want to be judicious and avoid guessing. The authors must explicitly mention the behavior in question specifically in relation to the CITED model with model identifier {{modelKey}}. Use only this JSON format in your response: {json_format}, based on the following:\n\n\"{{input}}\"""" )
+
+SINGLEPROMPT = GENERIC_PROMPT.format(question_statement = "The following statement is to be evaluated as either true or false.\n{question}\n",
+                                     json_format = '{{"answer": true | false}}')
+
+
+GENERIC_PROMPT_COT = ("""The following sentences are from an academic paper (the CITING paper) which references a pretrained machine learning model through citation (the CITED paper). The models are called foundation models, and they might be a language model, a vision model, or any other kind of large neural network. The CITED paper is highlighed using HTML tags as such: <cite> cited reference </cite>. All other foundation models can be ignored, as we only care about the model cited with these tags. If it's helpful, the model identifier of the CITED model is {{modelKey}}. 
+
+We'd like to answer determine whether the following statement is true or false:
+{question_statement}
+
+\n
+Use only this JSON format in your response: {json_format}. The sentences are as follows:\n\n\"{{input}}\"""" )
+
+SINGLEPROMPT_COT = GENERIC_PROMPT_COT.format(question_statement = "First, think out loud and explain your thoughts step-by-step in one sentence, then give a true/false answer.\n{question}\n",
+                                     json_format = '{{"explanation": "Step-by-step thought process here", "answer": true | false}}')
+
+
+GENERIC_PROMPT_COT_CONFIDENCE = ("""The following sentences are from an academic paper (the CITING paper) which references a pretrained machine learning model through citation (the CITED paper). The models are called foundation models, and they might be a language model, a vision model, or any other kind of large neural network. The CITED paper is highlighed using HTML tags as such: <cite> cited reference </cite>. All other foundation models can be ignored, as we only care about the model cited with these tags. If it's helpful, the model identifier of the CITED model is {{modelKey}}. 
+
+We'd like to answer determine how likely the statement below is to be true using a confidence value between 0 and 1. For example, almost certainly false should be 0, almost certainly true should be 1, and complete ambiguity is 0.5. You may give any value between 0 and 1.
+{question_statement}
+
+\n
+Use only this JSON format in your response: {json_format}. The sentences are as follows:\n\n\"{{input}}\"""" )
+
+SINGLEPROMPT_COT_CONFIDENCE = GENERIC_PROMPT_COT_CONFIDENCE.format(question_statement = "First, think out loud and explain your thoughts step-by-step in one sentence, then give a confidence score as your final answer.\n{question}\n",
+                                     json_format = '{{"explanation": "Step-by-step thought process here", "answer": float}}')

@@ -56,8 +56,8 @@ class OutputParser:
         except:
             return None
         
-    def parse(self, text: str) -> Optional[PydanticModel]:
-        output = self.stripOutput(text)  
+    def parse(self, text: str, strip_output = True) -> Optional[PydanticModel]:
+        output = self.stripOutput(text) if strip_output else text
         json_obj = self.stripJSON(output)
         model = self.stripModel(json_obj)
         

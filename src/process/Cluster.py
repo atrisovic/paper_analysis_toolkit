@@ -16,3 +16,10 @@ class Cluster:
         random.shuffle(L) #need consistency accross jobs
             
         return L[self.index - 1: self.limit : self.worker_count] #cluster_index is one-indexed
+    
+    def clusterDataframe(self, df): #assumes dataframe is already "sorted" in some deterministic sense
+        index_list = list(range(len(df)))
+        clustered_list = self.clusterList(index_list)
+        
+        mask = [i in clustered_list for i in range(len(df))]
+        return df[mask]

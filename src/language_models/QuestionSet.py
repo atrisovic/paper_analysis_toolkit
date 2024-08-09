@@ -15,15 +15,14 @@ class QuestionSet:
         self.questions = questions
         
     def get_answer_vector(self, response = List[Optional[BoolAnswer]], verbose = False):        
-        answer_vector = np.vectorize(lambda s: 1 if s else 0)(np.array([bool_answer.answer for bool_answer in response]))
+        answer_vector = np.vectorize(lambda s: s if s else 0)(np.array([None if not bool_answer else bool_answer.answer for bool_answer in response]))
         return answer_vector
     
     def ask_questions(self, subject, metadata, chat_interface: ChatInterface, prompt: str, tolerance = 1):
         results = []
         for question in self.questions:
             input = prompt.format(input = subject, modelKey = metadata, question = question)
-            output = chat_interface.generateAsModel(input, tolerance = tolerance)
+            output = chat_interface.generateAsModel(input, tolerance = tolerance, strip_output = False)
             results.append(output)
         
         return results
-            
