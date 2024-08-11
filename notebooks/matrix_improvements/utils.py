@@ -5,7 +5,7 @@ import ollama
 import pandas as pd
 import numpy as np
 import hashlib
- 
+from torch import nn
 
 
 master_path = '~/Desktop/2. FutureTech/uniform_sample/raw/uniform_base_sample'
@@ -140,3 +140,60 @@ def get_answer_vector(r_, length, verbose = False):
 
 def hash_dataframe(df: pd.DataFrame):
     return hashlib.md5(bytes(str(df), encoding='utf-8')).digest()
+
+
+def generateModel(input_size, classes, depth, dropout_rate = .5, base = 2):
+    assert(depth >= 2)
+    
+    internal_depth = depth - 2
+
+    left_size, right_size = int(np.floor(internal_depth/2) + (internal_depth % 2)), int(np.floor(internal_depth/2))
+
+    min_power_two = int(2 ** np.ceil(np.log2(input_size)))
+    growing_depths = [round(min_power_two * (base**i)) for i in range(left_size)]
+    shrinking_depths = [round(min_power_two * (base**i)) for i in range(right_size-1, -1, -1)]
+
+    depths = [input_size] + growing_depths + shrinking_depths + [classes]
+    
+    layers = []
+    for idx in range(len(depths) - 1):
+        layers.append(nn.Linear(depths[idx], depths[idx+1]))
+        layers.append(nn.ReLU())
+        if (idx == 0):
+            layers.append(nn.Dropout(dropout_rate))
+    layers.append(nn.Softmax(dim = 1))
+    
+    return nn.Sequential(*layers)
+
+ 
+def get_fp_fn(y_true, y_pred, positive_label = 'uses', positive_index = 1, verbose = False):
+    (pred_pos, pred_neg) = (y_pred == positive_label, y_pred != positive_label)
+    (true_pos, true_neg) = (y_true.reshape(-1,).cpu().numpy() == positive_index, y_true.reshape(-1,).cpu().numpy()  != positive_index)
+            
+    fp = (pred_pos & true_neg).sum()/pred_pos.sum() 
+    fn = (true_pos & pred_neg).sum()/true_pos.sum()
+    
+    if verbose:
+        print(f"{positive_label} false positive rate: {fp}\n{positive_label} false negative rate: {fn}")
+        print(f"FP_numerator: {pred_pos.sum()} int {true_neg.sum()} = {(pred_pos & true_neg).sum()}, FP_Denom: {pred_pos.sum()}")
+        print(f"FN Num {true_pos.sum()} int {pred_neg.sum()} = { (true_pos & pred_neg).sum()}, FN Denom {true_pos.sum()}") 
+    
+    return fp, fn
+
+
+def question_frequency_distribution(X, y, label_index):
+    return (X * (y == label_index)).sum(axis = 0).cpu()/((y == label_index).sum().cpu())
+
+
+
+def get_highest_relative_questions(X, y, target_index, reference_index, n = 10, print_ratios = False):
+    target_distribution = question_frequency_distribution(X, y, target_index)
+    reference_distribution =  question_frequency_distribution(X, y, reference_index)
+    ratios = list(enumerate([(t+.05)/(r+.05) for t,r in zip(target_distribution, reference_distribution)]))
+    sorted_ratios = sorted(ratios, key = lambda s: s[1], reverse = True)
+    
+    if print_ratios:
+        return sorted_ratios[:n]
+    else:
+        return [idx for idx, _ in sorted_ratios][:n]
+    
