@@ -4,7 +4,7 @@ import json
 from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
-from llama_cpp import Llama
+from llama_cpp import Llama, llama_tokenize
 import os
 
 username = os.getenv('USER') or os.getenv('USERNAME')
@@ -51,7 +51,21 @@ class LlamaCPPChatInterface(ChatInterface):
         self.resultsfile = resultsfile
         self.debug = debug
         
-    def generate(self, input: str, max_new_tokens = 5000, temperature = 1) -> str:
+    def get_available_tokens(self, input: str, model, max_context_window: int = 4096) -> int:
+        input_bytes = input.encode('utf-8')
+        input_length = len(model.tokenize(input_bytes))
+        return max(max_context_window - input_length, 0)
+
+    def generate(self, input: str, max_new_tokens = 4096, temperature = 1) -> str:
+        # Adjust input length if necessary
+        max_new_tokens = 3905 # accounts for other context inputs
+        available_tokens = self.get_available_tokens(input, self.model, max_new_tokens)
+    
+        # Shorten the input if needed
+        while available_tokens == 0:
+            input = input[:-1]
+            available_tokens = self.get_available_tokens(input, self.model, max_new_tokens)
+
         results = self.model.create_chat_completion(
             messages = [
                 {"role": "system", "content": "You are a detailed, knowledgeble, helpful assistant."},
@@ -59,10 +73,11 @@ class LlamaCPPChatInterface(ChatInterface):
                     "role": "user",
                     "content": input
                 }
-            ]
+            ],
+            temperature=temperature,
         )
         return results['choices'][0]['message']['content']
-        
+    
         
 class HFChatInterface(ChatInterface):    
     def __init__(self, model,  tokenizer,  
