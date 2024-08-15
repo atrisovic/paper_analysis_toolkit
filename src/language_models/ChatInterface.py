@@ -5,7 +5,9 @@ from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
 from llama_cpp import Llama
+import os
 
+username = os.getenv('USER') or os.getenv('USERNAME')
 logger = logging.getLogger(__name__)
 
 
@@ -45,7 +47,7 @@ class LlamaCPPChatInterface(ChatInterface):
         self.model = model
         self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = '/home/gridsan/afogelson/osfm/paper_analysis_toolkit/temp.log')
+                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
         self.resultsfile = resultsfile
         self.debug = debug
         
@@ -74,7 +76,7 @@ class HFChatInterface(ChatInterface):
         self.device = device
         self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = '/home/gridsan/afogelson/osfm/paper_analysis_toolkit/temp.log')
+                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
         self.resultsfile = resultsfile
         self.debug = debug
 
