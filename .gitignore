@@ -18,3 +18,4 @@ nltk_data/*
 results/*
 job_logs/*
 logs/*
+hub/*

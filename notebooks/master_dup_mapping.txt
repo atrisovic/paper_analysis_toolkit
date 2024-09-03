@@ -1,0 +1,447 @@
+{
+  "7b553b93682c25c8f03c97a7f8a05842c57ef2aa": [
+    "layerfusion,
+    [
+      "98_gpt2-layerfusion-ws",
+      "90_transformerxl-layerfusion-ca"
+    ]
+  ],
+  "d79a26226393f687ddbc375e32055b40b8ad8d38": [
+    "gpipe",
+    [
+      "gpipe_(amoeba)",
+      "gpipe_(transformer)"
+    ]
+  ],
+  "8f2bca9d684005675e294b33c26481e36f528cdb": [
+    "data2vec",
+    [
+      "data2vec_(vision)",
+      "data2vec_(language)",
+      "data2vec_(speech)"
+    ]
+  ],
+  "e11e8d81c68cc782f564ed78e595b66790719804": [
+    "transformer-xl",
+    [
+      "transformer-xl+adamp",
+      "transformer-xl+wn+adamp"
+    ]
+  ],
+  "d1275b2a2ab53013310e759e5c6878b96df643d4": [
+    "rnn:,
+    [
+      "49_rnn+lda+kn5+cache",
+      "315_context-dependent_rnn"
+    ]
+  ],
+  "87f40e6f3022adbc1f1905e3e506abad05a9964f": [
+    "word2vec",
+    [
+      "word2vec_(small)",
+      "word2vec_(large)"
+    ]
+  ],
+  "eb42cf88027de515750f230b23b1a057dc782108": [
+    "vgg",
+    [
+      "vgg19",
+      "vgg16"
+    ]
+  ],
+  "ad5970584754cc7a1d91c95ab84a1e210258183a": [
+    null,
+    [
+      "atlas",
+      "unifiedqa"
+    ]
+  ],
+  "1403e6b9adf7712c35ae56327d52fe54603b87e1": [
+    "xglm",
+    [
+      "xglm",
+      "xglm-7.5b"
+    ]
+  ],
+  "131f499e4d3503da93022d07fcf804a18483bea9": [
+    "wizardlm",
+    [
+      "wizardlm-7b",
+      "wizardlm_70b"
+    ]
+  ],
+  "daf6e4731470f6dbec9508d7ebdf026dd8527f26": [
+    "tf-lm-discourse_lstm",
+    [
+      "tf-lm-discourse_lstm_(ptb)",
+      "tf-lm-discourse_lstm_(wt2)"
+    ]
+  ],
+  "4ff52e24e02116b675abf085642b0de38f30b1eb": [
+    "discriminator_guidance",
+    [
+      "dit-xl_2_+_discriminator_guidance",
+      "discriminator_guidance"
+    ]
+  ],
+  "b19729b27a1b4c24b52f87308c907653300afa7f": [
+    "openai_five",
+    [
+      "openai_five",
+      "openai_five_rerun"
+    ]
+  ],
+  "77f0a39b8e02686fd85b01971f8feb7f60971f80": [
+    "resnet",
+    [
+      "resnet-200",
+      "resnet-1001"
+    ]
+  ],
+  "0b0d7d87c58d41b92d907347b778032be5966f60": [
+    "gpt3-6.7b",
+    [
+      "gpt3-6.7b_+_mup",
+      "gpt3-6.7b_(rerun_of_original)"
+    ]
+  ],
+  "ea64dbd29ab90d8944bcc6a05680aeaacc86fc0a": [
+    null,
+    [
+      "864_ftw",
+      "445_population-based_drl"
+    ]
+  ],
+  "aed145657eb6074cb23e226f699b217527596369": [
+    "wenet",
+    [
+      "wenet_(penn_treebank)",
+      "wenet_(wt2)"
+    ]
+  ],
+  "290bb3cafa82192c4d30661b370c1e4e4b1f03db": [
+    "m6",
+    [
+      "m6-10b",
+      "m6-100b"
+    ]
+  ],
+  "4d1e6c441a0b6aa2b9ec500a5064dc307d797b0c": [
+    "relationlm,
+    [
+      "937_spalm_+_relationlm",
+      "1138_transformerxl+relationlm"
+    ]
+  ],
+  "3bb63fdb4670745f8c97d8cad1a8a9603b1c16f5": [
+    "tcn",
+    [
+      "tcn_(p-mnist)",
+      "tcn_(148m)"
+    ]
+  ],
+  "c4c06578f4870e4b126e6837907929f3c900b99f": [
+    "capsnet",
+    [
+      "capsnet_(mnist)",
+      "capsnet_(multimnist)"
+    ]
+  ],
+  "0060745e006c5f14ec326904119dca19c6545e51": [
+    "dropout",
+    [
+      "dropout_(imagenet)",
+      "dropout_(mnist)",
+      "dropout_(timit)",
+      "dropout_(cifar)"
+    ]
+  ],
+  "cc1648c91ffda21bbe6e5f08f69c683588fc384c": [
+    "rl_mapping_instructions",
+    [
+      "rl_mapping_instructions_(games)",
+      "rl_mapping_instructions_(troubleshooting)"
+    ]
+  ],
+  "b5c26ab8767d046cb6e32d959fdf726aee89bb62": [
+    "inception",
+    [
+      "inceptionv4",
+      "inception-resnet-v2"
+    ]
+  ],
+  "f37e1b62a767a307c046404ca96bc140b3e68cb5": [
+    "glove",
+    [
+      "glove_(32b)",
+      "glove_(6b)"
+    ]
+  ],
+  "6c4b76232bb72897685d19b3d264c6ee3005bc2b": [
+    "t5",
+    [
+      "t5-11b",
+      "t5-3b"
+    ]
+  ],
+  "4972b88f8f324a4fa18e921f62a9857af2b5fc7b": [
+    null,
+    [
+      "bloomz-176b",
+      "mt0-13b"
+    ]
+  ],
+  "cdbd4f9b6ab2e2fd1ddf5400d5ed2c18960635d1": [
+    "flan",
+    [
+      "flan-palm_540b",
+      "flan-t5_11b"
+    ]
+  ],
+  "8323c591e119eb09b28b29fd6c7bc76bd889df7a": [
+    "megatron",
+    [
+      "megatron-lm_(8.3b)",
+      "megatron-bert"
+    ]
+  ],
+  "7a064df1aeada7e69e5173f7d4c8606f4470365b": [
+    "albert",
+    [
+      "albert",
+      "albert-xxlarge"
+    ]
+  ],
+  "efbd381493bb9636f489b965a2034d529cd56bcd": [
+    "lstm",
+    [
+      "970_zoneout_+_variational_lstm_(wt2)",
+      "391_pointer_sentinel-lstm_(medium)"
+    ]
+  ],
+  "88bb275161782df0d0873de01797964e6ca7b9d4": [
+    "dlrm",
+    [
+      "dlrm-12t",
+      "dlrm-2022"
+    ]
+  ],
+  "846aedd869a00c09b40f1f1f35673cb22bc87490": [
+    "alphago",
+    [
+      "alphago_fan",
+      "alphago_lee"
+    ]
+  ],
+  "693c97ecedb0a84539b7162c95e89fa3cd84ca73": [
+    "mnasnet",
+    [
+      "mnasnet-a3",
+      "mnasnet-a1_+_ssdlite"
+    ]
+  ],
+  "de996c32045df6f7b404dda2a753b6a9becf3c08": [
+    "nettalk",
+    [
+      "nettalk_(transcription)",
+      "nettalk_(dictionary)"
+    ]
+  ],
+  "5a2304ba4e4401db2e0df8188a5f761646b52480": [
+    "true-regularization",
+    [
+      "true-regularization+finetune",
+      "true-regularization+finetune+dynamic-eval"
+    ]
+  ],
+  "5f79398057bf0bbda9ff50067bc1f2950c2a2266": [
+    "pnas",
+    [
+      "pnas-net",
+      "pnasnet-5"
+    ]
+  ],
+  "fb01415a0decfa3f3d6339930e95028ae1ff4170": [
+    null,
+    [
+      "moe-1.1t",
+      "fairseq-dense_13b"
+    ]
+  ],
+  "a538b05ebb01a40323997629e171c91aa28b8e2f": [
+    "relu_",
+    [
+      "relu_(norb)",
+      "relu_(lfw)"
+    ]
+  ],
+  "ded103d0613e1a8f51f586cc1678aee3ff26e811": [
+    "rnn_sgd+clr",
+    [
+      "rnn_(sgd+clr)_(ptb)",
+      "rnn_(sgd+clr)"
+    ]
+  ],
+  "104b0bb1da562d53cbda87aec79ef6a2827d191a": [
+    "llama_2",
+    [
+      "llama_2-70b",
+      "llama_2-7b"
+    ]
+  ],
+  "425032e4fdd531cd7a5d3e7effc12d16f9c076d9": [
+    "big-little_net",
+    [
+      "big-little_net_(speech)",
+      "big-little_net",
+      "big-little_net_(vision)"
+    ]
+  ],
+  "f617f7ba4040d6e85b384685da09fed35c841280": [
+    "ct-mos_",
+    [
+      "ct-mos_+_dynamiceval_(wt2)",
+      "ct-mos_(wt2)"
+    ]
+  ],
+  "67d968c7450878190e45ac7886746de867bf673d": [
+    "n",
+    [
+      "nasv3_(cifar-10)",
+      "neural_architecture_search_with_base_8_and_shared_embeddings"
+    ]
+  ],
+  "609e1c196fced582caf9113aa6a003b64d3cdcd6": [
+    null,
+    [
+      "173_transformer_large_+_hcp",
+      "813_segatron-xl_large,_m=384_+_hcp"
+    ]
+  ],
+  "24c26cb896e79391b6fbbc99db37345081b9da28": [
+    null,
+    [
+      "rasor",
+      "densephrases"
+    ]
+  ],
+  "2c03df8b48bf3fa39054345bafabfeff15bfd11d": [
+    "resnet-1",
+    [
+      "resnet-152_(imagenet)",
+      "resnet-110_(cifar-10)"
+    ]
+  ],
+  "9819b600a828a57e1cde047bbe710d3446b30da5": [
+    "rnn",
+    [
+      "kn5_lm_+_rnn_400_10_(wsj)",
+      "rnn_500_10_+_rt09_lm_(nist_rt05)"
+    ]
+  ],
+  "672f28e2772b7d7895c5ce08ccd07eac3e60219e": [
+    "lstm",
+    [
+      "dropout-lstm+noise(bernoulli)_(wt2)",
+      "lstm+noise(beta)"
+    ]
+  ],
+  "1882f194cb43828852cc052887671e55a80f945a": [
+    "gshard_",
+    [
+      "gshard_(600b)",
+      "gshard_(dense)"
+    ]
+  ],
+  "c10075b3746a9f3dd5811970e93c8ca3ad39b39d": [
+    null,
+    [
+      "stable_diffusion_(ldm-kl-8-g)",
+      "ldm-1.45b"
+    ]
+  ],
+  "6f870f7f02a8c59c3e23f407f3ef00dd1dcf8fc4": [
+    "clip",
+    [
+      "clip_(vit_l_14@336px)",
+      "clip_(resnet-50)"
+    ]
+  ],
+  "2f027193fb703d0af58ec382bd1438daff9417d7": [
+    null,
+    [
+      "boxes",
+      "glee"
+    ]
+  ],
+  "c27db32efa8137cbf654902f8f728f338e55cd1c": [
+    "alphago_",
+    [
+      "alphago_master",
+      "alphago_zero"
+    ]
+  ],
+  "57e849d0de13ed5f91d086936296721d4ff75a75": [
+    "llama",
+    [
+      "llama-65b",
+      "llama-7b"
+    ]
+  ],
+  "1420b9ff9c7ecfc8c8b5fdce4517e6fc51cebf92": [
+    "ankh",
+    [
+      "ankh_base",
+      "ankh_large"
+    ]
+  ],
+  "50bdda28de3dcf82a0e10f9ec13eea248b19edb5": [
+    "amoebanet",
+    [
+      "amoebanet-a_(f=448)",
+      "amoebanet-a_(f=190)"
+    ]
+  ],
+  "0b0debb710366cdff461938c80763eace1651af6": [
+    "code_llama",
+    [
+      "code_llama-34b",
+      "code_llama_70b"
+    ]
+  ],
+  "268d347e8a55b5eb82fb5e7d2f800e33c75ab18a": [
+    "vit",
+    [
+      "vit-huge_14",
+      "vit-base_32"
+    ]
+  ],
+  "88ee291cf1f57fd0f4914a80b986a08a90d887f1": [
+    "resnet/resnext",
+    [
+      "resnext-101_billion-scale",
+      "resnet-50_billion-scale"
+    ]
+  ],
+  "79cfb51a51fc093f66aac8e858afe2e14d4a1f20": [
+    "retinanet",
+    [
+      "retinanet-r101",
+      "retinanet-r50"
+    ]
+  ],
+  "432bef8e34014d726c674bc458008ac895297b51": [
+    "mamba",
+    [
+      "mamba-2.8b",
+      "mamba-24m_(sc09)"
+    ]
+  ],
+  "bc022dbb37b1bbf3905a7404d19c03ccbf6b81a8": [
+    "igpt",
+    [
+      "igpt-l",
+      "igpt-xl"
+    ]
+  ]
+}

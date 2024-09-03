@@ -292,4 +292,5 @@ background_tentative = [
 ]
 
 
-weighted = improved_uses * 2 + improved_extends * 2
+weighted = improved_uses * 3 + improved_extends * 3
+

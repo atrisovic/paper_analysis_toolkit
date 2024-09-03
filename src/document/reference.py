@@ -1,5 +1,4 @@
 from src.document.textual_reference import TextualReference
-from src.classifier.MultiCiteClassifier import MultiCiteClassifier
 from src.functional import implies
 from src.process.FoundationModel import FoundationModel
 
@@ -84,7 +83,7 @@ class Reference:
         
         return self.textualReferences
 
-    def classifyAllSentences(self, classifier: MultiCiteClassifier):
+    def classifyAllSentences(self, classifier):
         for textualReference in self.textualReferences:
             textualReference.classify(classifier=classifier)
             

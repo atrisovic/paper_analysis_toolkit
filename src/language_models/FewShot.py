@@ -4,9 +4,10 @@ import json
 from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
+import os
 
 logger = logging.getLogger(__name__)
-
+username = os.getenv('USER') or os.getenv('USERNAME')
 
 class FewShotExample(PydanticModel):
     input: str
@@ -32,7 +33,7 @@ class FewShotPipeline:
         self.device = device
         self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = '/home/gridsan/afogelson/osfm/paper_analysis_toolkit/temp.log')
+                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
         self.resultsfile = resultsfile
         self.prompt = prompt
         self.debug = debug

@@ -47,7 +47,7 @@ class LlamaCPPChatInterface(ChatInterface):
         self.model = model
         self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
+                                         logfile = None)
         self.resultsfile = resultsfile
         self.debug = debug
         

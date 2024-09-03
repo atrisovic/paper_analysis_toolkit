@@ -3,7 +3,6 @@ import json
 from typing import Optional
 
 
-
 class OutputParser:
     def __init__(self, outputClass: PydanticModel, logfile = None):
         self.outputClass = outputClass

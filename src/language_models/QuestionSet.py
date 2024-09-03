@@ -15,7 +15,7 @@ class QuestionSet:
         self.questions = questions
         
     def get_answer_vector(self, response = List[Optional[BoolAnswer]], verbose = False):        
-        answer_vector = np.vectorize(lambda s: s if s else 0)(np.array([None if not bool_answer else bool_answer.answer for bool_answer in response]))
+        answer_vector = np.vectorize(lambda s: float(s) if s else 0)(np.array([None if not bool_answer else bool_answer.answer for bool_answer in response]))
         return answer_vector
     
     def ask_questions(self, subject, metadata, chat_interface: ChatInterface, prompt: str, tolerance = 1):
