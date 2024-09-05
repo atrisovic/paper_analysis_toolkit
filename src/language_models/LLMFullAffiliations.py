@@ -3,6 +3,8 @@ from src.language_models.FewShot import FewShotPipeline
 import logging
 from src.prompts.affiliation_prompts import PROMPT1
 from typing import List, Literal
+from src.language_models.ChatInterface import HFChatInterface
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,11 +51,14 @@ class LLMFullAffiliationsPipepline(FewShotPipeline):
                                 schema = self.getSchema().replace('{', '{{').replace('}', '}}'), 
                                 input = '{input}'
                                )
-        super().__init__(model = model, 
-                        tokenizer=tokenizer, 
-                        device = device, 
-                        outputClass = PaperAffiliationsStrict if strict else PaperAffiliationsNonStrict, 
-                        resultsfile=resultsfile,
+        interface = HFChatInterface(model, 
+                                    tokenizer, 
+                                    device, 
+                                    PaperAffiliationsStrict if strict else PaperAffiliationsNonStrict, 
+                                    debug = debug,
+                                    resultsfile = resultsfile)
+
+        super().__init__(interface=interface,
                         prompt = prompt,
                         debug = debug)
 

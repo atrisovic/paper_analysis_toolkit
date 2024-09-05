@@ -5,11 +5,12 @@ from src.language_models.ChatInterface import ChatInterface
 
 class BoolAnswer(BaseModel):
     answer: bool 
+   
     
 class FloatAnswer(BaseModel):
     answer: confloat(ge = 0, le = 1) # type: ignore
     
-    
+     
 class QuestionSet:
     def __init__(self, questions):
         self.questions = questions

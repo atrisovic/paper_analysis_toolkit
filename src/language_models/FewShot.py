@@ -5,6 +5,7 @@ from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
 import os
+from src.language_models.ChatInterface import ChatInterface
 
 logger = logging.getLogger(__name__)
 username = os.getenv('USER') or os.getenv('USERNAME')
@@ -14,24 +15,18 @@ class FewShotExample(PydanticModel):
     output: str
     
     
-    
 class FewShotPipeline:
     examples: List[Dict]
     
     def __init__(self, 
-                 model, 
-                 tokenizer, 
+                 interface: ChatInterface,
                  prompt: str, 
-                 device = None, 
                  outputClass: PydanticModel = None, 
                  resultsfile: str = None,
                  debug: bool = True):
         
-        self.model = model
-        self.tokenizer = tokenizer
+        self.interface = interface
         self.examples = []
-        self.device = device
-        self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
                                          logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
         self.resultsfile = resultsfile
@@ -75,47 +70,27 @@ class FewShotPipeline:
         few_shots += self.generateZeroShotPrompt(input = input, output = None)
             
         return few_shots
-    
-    # Generate using few shot prompt
-    def generate(self, input: str, max_examples: int = None):        
-        few_shot = self.getFewShotPrompt(input, max_examples = max_examples)
-        
-        encodeds = self.tokenizer.apply_chat_template(few_shot, return_tensors="pt")
 
-        model_inputs = encodeds.to(self.device)
-
-        generated_ids = self.model.generate(model_inputs, 
-                                            max_new_tokens=5000, 
-                                            pad_token_id = self.tokenizer.eos_token_id, 
-                                            do_sample=True, 
-                                            temperature=.5)
-        decoded = self.tokenizer.batch_decode(generated_ids)[0]
+    def generate(self, input: str, 
+                        max_examples: int = None, 
+                        strict = False, 
+                        tolerance = 5, 
+                        identifier: str = None, 
+                        strip_output: bool = True, 
+                        last_attempt = False):   
+            
+        if (self.examples):
+            input = self.getFewShotPrompt(input, max_examples = max_examples)
         
-            
-        return decoded
+        if (strict):
+            return self.interface.generateAsModel(input = input, 
+                                        tolerance=tolerance, 
+                                        identifier=identifier, 
+                                        strip_output = strip_output, 
+                                        last_attempt=last_attempt)
+        else:
+            return self.interface.generate(input, temperature=.5)
     
-    
-    # Iteratively generate output and force output to match a Pydantic Model.
-    def generateAsModel(self, input: str, tolerance = 5, identifier: str = None, last_attempt = False) -> PydanticModel:
-        counter, results, output_object = 0, None, None
-   
-        while counter < tolerance and not output_object and input is not None:
-            counter += 1
-            try:
-                results = self.generate(input = input)
-            except OutOfMemoryError as e:
-                logger.info(f"Ran out of memory with input of size: {len(input)} on iteration {counter + 1} of {tolerance}. Input:\n{input}")
-                output_object = None
-                break
-            
-            output_object = self.outputParser.parse(results)
-            
 
-        if (self.resultsfile and identifier and (last_attempt or output_object)):
-            json_result = {identifier: output_object.model_dump() if output_object else results if self.debug else None}
-            with open(self.resultsfile, 'a+') as f:
-                f.write(json.dumps(json_result) + '\n')
-        
-        return output_object
     
     

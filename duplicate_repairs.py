@@ -1,79 +1,90 @@
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from torch import backends, cuda, bfloat16
+from pydantic import BaseModel, confloat
+from llama_cpp import Llama
+from src.language_models.ChatInterface import LlamaCPPChatInterface
+from src.language_models.QuestionSet import QuestionSet
+from datetime import datetime
+from src.prompts.disambiguation_prompts import PROMPT1
 import pandas as pd
 from tqdm import tqdm
 import argparse
-from datetime import datetime 
-
-from config import LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
-
 from src.process.Cluster import Cluster
-
-from src.language_models.LLMModelSelector import LLMModelSelector
-from src.prompts.affiliation_prompts import PROMPT3
+import json
 from csv import DictWriter
+import regex as re
+import os
 
 
-def main():
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--index', default = 1, type = int, help = 'One-indexed index of worker for this particular job.')
-    parser.add_argument('-n', '--workers', default = 1, type = int, help = 'Total jobs to be run *in separate jobs*')
-    parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of documents scanned.')
-    parser.add_argument('-d', '--debug', action = 'store_true', help = "Adding this flag will enabled debug logging.")
-    parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
+class StringAnswer(BaseModel):
+    answer: str
 
-    args = parser.parse_args()
-    right_now = datetime.now().replace(microsecond=0)
-    
-    cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
 
-        
-    device = 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
-    print(f"Using device = {device}")
-    
-    refresh = False
-    if (not refresh):
-        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_PATH, device_map = device)
-        tokenizer = AutoTokenizer.from_pretrained(LLM_TOKENIZER_PATH, device = device)
-    else:
-        bnb_config = None if 'cuda' not in device else BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_compute_dtype=bfloat16) 
-        model = AutoModelForCausalLM.from_pretrained(LLM_MODEL_NAME, device_map=device, quantization_config=bnb_config)
-        tokenizer = AutoTokenizer.from_pretrained(LLM_MODEL_NAME, device = device)
+username = os.getenv('USER') or os.getenv('USERNAME')
 
-        model.save_pretrained(LLM_MODEL_PATH, from_pt=True)
-        tokenizer.save_pretrained(LLM_TOKENIZER_PATH, from_pt = True)
-                
+    
+##### ARGUMENT PARSING #####
 
-    models_path = '/home/gridsan/afogelson/osfm/saved_results/ai_models/models_urop.csv'
-    citations_path = '/home/gridsan/afogelson/osfm/saved_results/citations/citations_0530/results/merged_results.csv'
+parser = argparse.ArgumentParser()
+parser.add_argument('-i', '--index', default = 1, type = int, help = 'One-indexed index of worker for this particular job.')
+parser.add_argument('-n', '--workers', default = 1, type = int, help = 'Total jobs to be run *in separate jobs*')
+parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of foundation models analyzed.')
+parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
 
-    selector = LLMModelSelector(model = model, tokenizer = tokenizer, device = device, models_path = models_path)
-    citations_df = (pd.read_csv(citations_path)    
-                        .sort_values(by=['paperId', 'modelKey', 'classification_order'], ascending=[True, True, False])
-                        .drop_duplicates(subset=['paperId', 'modelKey'], keep='first')
-                        )
-    
-    print(f"After dropping duplicates, we found {len(citations_df)}")
-    
-    citations_df = citations_df[citations_df['classification'].apply(lambda s: s in ('uses', 'extends'))]
-    
-    print(f"Filtering by only uses and extends, we have {len(citations_df)}")
-    
-    data = list(zip(citations_df['sentence'], citations_df['modelId'], citations_df['paperId']))
-    
-    clustered_data = cluster.clusterList(data)
-    output_path = f'/home/gridsan/afogelson/osfm/paper_analysis_toolkit/results/modelKeySelection/results_{right_now}_{args.index}_of_{args.workers}.csv'
-    f = open(output_path, 'w')
-    dict_writer = DictWriter(f, fieldnames=['sentence', 'modelId', 'paperId', 'selectedKey']) 
-    dict_writer.writeheader()
-    
-    for sentence, modelId, paperId in tqdm(clustered_data):
-        selected_key = selector.find_model_key(sentence, modelId)
-        dict_writer.writerow({'sentence': sentence, 'modelId': modelId, 'paperId': paperId, 'selectedKey': selected_key})
-        f.flush()
-        
-    f.close()
+args = parser.parse_args()
+cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)
 
-if __name__ == '__main__':
-    main()
+
+##### LOAD MODEL AND QUESTION SET #####
+
+model_path = 'saved_models/models--bullerwins--Meta-Llama-3.1-8B-Instruct-GGUF/Meta-Llama-3.1-8B-Instruct-Q8_0.gguf'
+model = Llama(model_path, n_gpu_layers = -1, n_ctx = 4096, verbose = False)
+interface = LlamaCPPChatInterface(model = model, outputClass = StringAnswer)
+
+
+mapping_path = '/data1/groups/futuretech/atrisovic/osfm/paper_analysis_toolkit/notebooks/master_dup_mapping.txt'
+with open(mapping_path, 'r') as f:
+    duplicate_mapping = json.load(f)
+
+
+samples_path = '/data1/groups/futuretech/atrisovic/osfm/saved_results/classifier/trials/results/premicrosoft_meeting_classified.csv'
+df = cluster.clusterDataframe(pd.read_csv(samples_path, nrows = 1e5))
+
+
+df = df[df['modelId'].apply(lambda id: id in duplicate_mapping)]
+df = df[df['classification'].apply(lambda c: c in {'extends', 'uses'})]
+
+
+df.drop_duplicates(subset = ['modelId', 'paperId', 'multisentence'], inplace = True)
+
+output_path = '/home/gridsan/afogelson/osfm/saved_results/classifier/trials/results/premicrosoft_meeting_results_disambiguated.csv'
+with open(output_path, 'a') as f:
+        if f.tell() == 0:
+            csv_writer = DictWriter(f, fieldnames=df.columns)
+            csv_writer.writeheader()
+
+
+
+##### ASK QUESTIONS! #####
+
+
+for idx, row in tqdm(df.iterrows(), total = len(df)):
+    model_name, variant_list = duplicate_mapping[row['modelId']]
+    
+    piped_variant = '" | "'.join(variant_list)
+    comma_variant = '"' + '", "'.join(variant_list) + '"'
+    prompt = PROMPT1.format(foundation_model_name = model_name, 
+                            piped_variant = piped_variant,
+                            comma_variant = comma_variant, 
+                            sentences = row['multisentence'])
+
+    
+    response = interface.generateAsModel(input = prompt)
+    
+    row['modelKey'] = response.answer
+    df['modelKey'].at[idx] = response.answer
+    
+    with open(output_path, 'a') as f:
+        csv_writer = DictWriter(f, fieldnames=df.columns)
+        csv_writer.writerow(dict(row))
+    
+distribution = df['modelKey'].apply(lambda s: s if s in {'UNCLEAR', 'ALL'} else 'SPECIFIED').value_counts()/len(df)
+print(distribution)

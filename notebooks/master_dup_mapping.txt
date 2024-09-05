@@ -1,6 +1,6 @@
 {
   "7b553b93682c25c8f03c97a7f8a05842c57ef2aa": [
-    "layerfusion,
+    "layerfusion",
     [
       "98_gpt2-layerfusion-ws",
       "90_transformerxl-layerfusion-ca"
@@ -29,7 +29,7 @@
     ]
   ],
   "d1275b2a2ab53013310e759e5c6878b96df643d4": [
-    "rnn:,
+    "rnn",
     [
       "49_rnn+lda+kn5+cache",
       "315_context-dependent_rnn"
@@ -127,7 +127,7 @@
     ]
   ],
   "4d1e6c441a0b6aa2b9ec500a5064dc307d797b0c": [
-    "relationlm,
+    "relationlm",
     [
       "937_spalm_+_relationlm",
       "1138_transformerxl+relationlm"

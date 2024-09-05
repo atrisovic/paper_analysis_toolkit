@@ -160,21 +160,12 @@ class Paper:
         return reference
     
     
-    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:        
-        name_and_affiliation = pipeline.generateAsModel(input = self.pre_abstract, identifier = self.id, last_attempt = not(self.preIntro))
+    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:      
+        print(self.pre_abstract)
+        name_and_affiliation = pipeline.generate(strict = True, input = self.pre_abstract, identifier = self.id, last_attempt = not(self.preIntro)) 
         if (self.preIntro and not name_and_affiliation):
-            name_and_affiliation = pipeline.generateAsModel(input = self.preIntro, identifier = self.id, last_attempt=True)
-        
-        '''window_size, step_size, total_steps = 10, 5, 10
-        content_lines = self.getContent().split('\n')
-        for i in range(total_steps):
-            if name_and_affiliation is None:
-                last_iter = (i == total_steps - 1)
-                window = '\n'.join(content_lines[step_size*i: step_size * i + window_size]) #little wasteful but prettier 
-                logger.debug(f"Running on window of length ({len(window)}) for paperId = {self.id}.")
-                name_and_affiliation = pipeline.generateAsModel(input = window, identifier = self.id, tolerance = 1, last_attempt=last_iter) #this self.id ref might cause a dependency cyle, which is not immediately gc'd
-        '''
-        
+            name_and_affiliation = pipeline.generate(strict = True, input = self.preIntro, identifier = self.id, last_attempt=True)
+            
         
         self.name_and_affiliation = name_and_affiliation
         return self.name_and_affiliation

@@ -14,7 +14,8 @@ logger = logging.getLogger(__name__)
 class ChatInterface:
     def generate(self, input: str, max_new_tokens = 5000, temperature = 1) -> str:
         pass
-        # Iteratively generate output and force output to match a Pydantic Model.
+    
+    # Iteratively generate output and force output to match a Pydantic Model.
     def generateAsModel(self, input: str, tolerance = 5, identifier: str = None, last_attempt = False, strip_output = True) -> PydanticModel:
         counter, results, output_object = 0, None, None
    
@@ -36,8 +37,7 @@ class ChatInterface:
                 f.write(json.dumps(json_result) + '\n')
         
         return output_object
-    
-
+   
 
 class LlamaCPPChatInterface(ChatInterface):
     def __init__(self, model,
