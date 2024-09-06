@@ -1,8 +1,6 @@
 from src.document.paper import Paper, ReferenceSectionCountException
-from src.classifier.CitationClassifier import CitationClassifier
 from src.document.reference import Reference
 from src.process.FoundationModel import FoundationModel
-from src.language_models.LLMFullAffiliations import LLMFullAffiliationsPipepline
 from src.functional import stemmed_basename
 from src.process.Cluster import Cluster
 
@@ -88,20 +86,19 @@ class Corpus:
  
         return good_papers, bad_papers
   
-    def findAllReferencesForModel(self, model: FoundationModel, classifier: CitationClassifier):
-        logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}).{ 'Classification is turned off.' if not classifier else ''}")
+    def findAllReferencesForModel(self, model: FoundationModel):
+        logger.info(f"Finding references for (key = {model.key}, title = {model.title[:30]}).")
         for paper in self.papers:
-            paper.getReferenceFromTitle(model = model, classifier = classifier)
+            paper.getReferenceFromTitle(model = model)
         logger.info(f"References successfully saved to underlying paper objects.")
             
     def findAllReferencesAllModels(self, models = List[FoundationModel],
-                                        classifier: CitationClassifier = None,
                                         resultsfile: str = None):
 
-        logger.info(f"Finding references to {len(models)} foundation models in corpus {'and' if classifier else 'without'} classifying sentences.")
+        logger.info(f"Finding references to {len(models)} foundation models in corpus.")
         header = True
         for model in tqdm(models):
-            self.findAllReferencesForModel(model = model, classifier=classifier)
+            self.findAllReferencesForModel(model = model)
             
             textRefByKey = [json for json in self.getAllTextualReferences(as_dict = True) if json.get('modelId') == model.id]
             df = pd.DataFrame.from_dict(textRefByKey)
@@ -116,8 +113,8 @@ class Corpus:
     def getAllTextualReferences(self, as_dict = False):
         return [row for paper in self.papers for row in paper.getAllTextualReferences(as_dict = as_dict)]
     
-    def getAllAffiliations(self, pipeline: LLMFullAffiliationsPipepline):
+    def getAllAffiliations(self, pipeline, results_path = None):
         for paper in tqdm(self.papers):
             logging.debug(f"Checking affiliation for paper at {paper.path}.")
-            paper.getNamesAndAffiliations(pipeline=pipeline)
+            paper.getNamesAndAffiliations(pipeline=pipeline, results_path = results_path)
             collect()

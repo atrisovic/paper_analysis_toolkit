@@ -140,7 +140,7 @@ class Paper:
         
         return content
     
-    def getReferenceFromTitle(self, model: FoundationModel, classifier = None) -> Reference:        
+    def getReferenceFromTitle(self, model: FoundationModel) -> Reference:        
         content = self.getContent()
         
         if (content is None):
@@ -151,20 +151,24 @@ class Paper:
         
         reference.getCitationFromContent(content = self.getSectionsByLabel(label = 'reference'))
         reference.getTextualReferencesFromSentences(all_sentences=self.getSentences())
-        
-        if classifier:
-            reference.classifyAllSentences(classifier = classifier)
 
         self.references[model.key] = reference
         
         return reference
     
     
-    def getNamesAndAffiliations(self, pipeline: FewShotPipeline) -> dict:      
-        print(self.pre_abstract)
-        name_and_affiliation = pipeline.generate(strict = True, input = self.pre_abstract, identifier = self.id, last_attempt = not(self.preIntro)) 
+    def getNamesAndAffiliations(self, pipeline: FewShotPipeline, results_path = None) -> dict:      
+        name_and_affiliation = pipeline.generate(strict = True, 
+                                                 input = self.pre_abstract, 
+                                                 identifier = self.id, 
+                                                 last_attempt = not(self.preIntro),
+                                                 results_path = results_path) 
         if (self.preIntro and not name_and_affiliation):
-            name_and_affiliation = pipeline.generate(strict = True, input = self.preIntro, identifier = self.id, last_attempt=True)
+            name_and_affiliation = pipeline.generate(strict = True, 
+                                                     input = self.preIntro, 
+                                                     identifier = self.id, 
+                                                     last_attempt=True, 
+                                                     results_path = results_path)
             
         
         self.name_and_affiliation = name_and_affiliation

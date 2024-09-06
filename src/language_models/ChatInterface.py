@@ -4,7 +4,6 @@ import json
 from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
-from llama_cpp import Llama, llama_tokenize
 import os
 
 username = os.getenv('USER') or os.getenv('USERNAME')
@@ -16,9 +15,15 @@ class ChatInterface:
         pass
     
     # Iteratively generate output and force output to match a Pydantic Model.
-    def generateAsModel(self, input: str, tolerance = 5, identifier: str = None, last_attempt = False, strip_output = True) -> PydanticModel:
+    def generateAsModel(self, 
+                        input: str, 
+                        tolerance = 5, 
+                        identifier: str = None, 
+                        last_attempt = False, 
+                        strip_output = True,
+                        results_path = None) -> PydanticModel:
         counter, results, output_object = 0, None, None
-   
+        
         while counter < tolerance and not output_object and input is not None:
             counter += 1
             try:
@@ -31,9 +36,9 @@ class ChatInterface:
             output_object = self.outputParser.parse(results, strip_output)
             
 
-        if (self.resultsfile and identifier and (last_attempt or output_object)):
+        if (results_path and identifier and (last_attempt or output_object)):
             json_result = {identifier: output_object.model_dump() if output_object else results if self.debug else None}
-            with open(self.resultsfile, 'a+') as f:
+            with open(results_path, 'a+') as f:
                 f.write(json.dumps(json_result) + '\n')
         
         return output_object
@@ -42,13 +47,11 @@ class ChatInterface:
 class LlamaCPPChatInterface(ChatInterface):
     def __init__(self, model,
                  outputClass: PydanticModel = None, 
-                 resultsfile: str = None,
                  debug: bool = True):
         self.model = model
         self.outputClass = outputClass
         self.outputParser = OutputParser(outputClass = outputClass, 
                                          logfile = None)
-        self.resultsfile = resultsfile
         self.debug = debug
         
     def get_available_tokens(self, input: str, model, max_context_window: int = 4096) -> int:
@@ -83,16 +86,13 @@ class HFChatInterface(ChatInterface):
     def __init__(self, model,  tokenizer,  
                  device = None, 
                  outputClass: PydanticModel = None, 
-                 resultsfile: str = None,
                  debug: bool = True):
         
         self.model = model
         self.tokenizer = tokenizer
         self.device = device
         self.outputClass = outputClass
-        self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
-        self.resultsfile = resultsfile
+        self.outputParser = OutputParser(outputClass = outputClass)
         self.debug = debug
 
     

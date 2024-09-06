@@ -34,8 +34,6 @@ def main():
     resultsfile = f"results/citations/results_{right_now}_worker{args.index}of{args.workers}.csv"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
-    classifier = None #load_classifier(prompt = PROMPT2)
-
         
     corpus = Corpus(MARKDOWN_FILES_PATH, 
                         extensions = ['mmd'], 
@@ -48,7 +46,6 @@ def main():
     models = FoundationModel.modelsFromJSON(FOUNDATION_MODELS_PATH)
           
     corpus.findAllReferencesAllModels(models = models,
-                                     classifier = classifier,
                                      resultsfile = resultsfile)
 
         

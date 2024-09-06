@@ -4,7 +4,7 @@ from datetime import datetime
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import  logging, argparse
 
-from src.language_models.LLMInstitutions import LLMInstitutions, ListInstitutions
+from paper_analysis_toolkit.src.language_models.InstitutionsPipeline import InstitutionsPipeline, ListInstitutions
 from src.prompts.affiliation_prompts import PROMPT3
 from src.language_models.ChatInterface import LlamaCPPChatInterface
 
@@ -28,7 +28,7 @@ def main():
     
     right_now = datetime.now().replace(microsecond=0)
     logfile = f"logs/affiliations/logfile_{right_now}_worker{args.index}of{args.workers}.log"
-    resultsfile = f"results/affiliations/results_{right_now}_worker{args.index}of{args.workers}.log"
+    results_path = f"results/affiliations/results_{right_now}_worker{args.index}of{args.workers}.log"
     logging.basicConfig(filename=logfile, level=logging.DEBUG if args.debug else logging.INFO)
     
 
@@ -36,8 +36,7 @@ def main():
     model = Llama(model_path, n_gpu_layers = -1, n_ctx = 4096, verbose = False)
     interface = LlamaCPPChatInterface(model = model, outputClass = ListInstitutions)
     
-    affPipepline = LLMInstitutions(interface = interface,
-                                    resultsfile = resultsfile,
+    affPipepline = InstitutionsPipeline(interface = interface,
                                     prompt = PROMPT3,
                                     debug = args.debug)
         
@@ -48,7 +47,7 @@ def main():
                         lazy = not args.eagerstorage,
                         confirm_paper_ref_sections=False)
     
-    corpus.getAllAffiliations(pipeline = affPipepline)
+    corpus.getAllAffiliations(pipeline = affPipepline, results_path=results_path)
 
 
 

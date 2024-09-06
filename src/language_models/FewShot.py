@@ -1,6 +1,5 @@
 from pydantic import BaseModel as PydanticModel
 from typing import Dict, List, Union
-import json
 from src.language_models.OutputParser import OutputParser
 import logging
 from torch.cuda import OutOfMemoryError
@@ -22,14 +21,11 @@ class FewShotPipeline:
                  interface: ChatInterface,
                  prompt: str, 
                  outputClass: PydanticModel = None, 
-                 resultsfile: str = None,
                  debug: bool = True):
         
         self.interface = interface
         self.examples = []
-        self.outputParser = OutputParser(outputClass = outputClass, 
-                                         logfile = f'/home/gridsan/{username}/osfm/paper_analysis_toolkit/temp.log')
-        self.resultsfile = resultsfile
+        self.outputParser = OutputParser(outputClass = outputClass)
         self.prompt = prompt
         self.debug = debug
         
@@ -77,17 +73,21 @@ class FewShotPipeline:
                         tolerance = 5, 
                         identifier: str = None, 
                         strip_output: bool = True, 
-                        last_attempt = False):   
+                        last_attempt = False, 
+                        results_path = None):   
             
         if (self.examples):
             input = self.getFewShotPrompt(input, max_examples = max_examples)
+        else:
+            input = self.wrapInstructions(input = input)
         
         if (strict):
             return self.interface.generateAsModel(input = input, 
                                         tolerance=tolerance, 
                                         identifier=identifier, 
                                         strip_output = strip_output, 
-                                        last_attempt=last_attempt)
+                                        last_attempt=last_attempt,
+                                        results_path = results_path)
         else:
             return self.interface.generate(input, temperature=.5)
     

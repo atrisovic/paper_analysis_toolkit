@@ -52,9 +52,8 @@ model = Llama(model_path, n_gpu_layers = -1, n_ctx = 4096, verbose = False)
 interface = LlamaCPPChatInterface(model = model, outputClass = COTAnswer)
 
 
-#'/home/gridsan/afogelson/osfm/saved_results/classifier/trials/results/labeled_samples_4_of_32_2024-08-14 17:28:00.csv'
-#'/home/gridsan/atrisovic/futuretech_shared/atrisovic/osfm/saved_results/classifier/trials/results/labeled_samples_15_of_32_2024-08-14 20:38:00.csv'
-#'/home/gridsan/atrisovic/futuretech_shared/atrisovic/osfm/saved_results/classifier/trials/results/labeled_samples_14_of_32_2024-08-14 20:38:00.csv' #None
+##### LOAD CLUSTERED DATAFRAME #####
+
 
 #csv_path = '/home/gridsan/afogelson/osfm/saved_results/classifier/labeled_samples.csv' 
 csv_path = f'/home/gridsan/{username}/osfm/saved_results/citations/0814/results_2024-08-14_removed_double_reject_fms.csv'
@@ -69,6 +68,7 @@ if (vector_column not in df.columns):
     df[answer_column] = [None for i in range(len(df))]
 
 ##### SAVE METADATA #####
+
 right_now = datetime.now().replace(microsecond=0, second=0)
 
 worker_label = f'{args.index}_of_{args.workers}_' if args.workers > 1 else ''
@@ -80,9 +80,6 @@ metadata_path = f'/home/gridsan/{username}/osfm/saved_results/classifier/trials/
 
 
 existing_results_path = output_path #'/home/gridsan/afogelson/osfm/saved_results/classifier/trials/results/merged_classification_results.csv' #output_path
-
-
-##### LOAD CLUSTERED DATAFRAME #####
 
 
 if (args.workers == 1 or args.index == 1):
