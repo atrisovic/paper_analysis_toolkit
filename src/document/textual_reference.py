@@ -1,4 +1,4 @@
-from src.classifier.CitationClassifier import CitationClassifier
+from src.classifiers.CitationClassifier import CitationClassifier
 from typing import Set
 
 class TextualReference:

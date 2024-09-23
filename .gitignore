@@ -19,3 +19,4 @@ results/*
 job_logs/*
 logs/*
 hub/*
+slurm/*

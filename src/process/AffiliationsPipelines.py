@@ -79,7 +79,7 @@ class FewShotAffiliationsPipeline(FewShotPipeline):
     def __init__(self, 
                  interface: ChatInterface,
                  prompt = PROMPT1,
-                 debug =  False)
+                 debug = False):
         
         #need to be careful with the brackets as we pass them around!
         self.interface = interface

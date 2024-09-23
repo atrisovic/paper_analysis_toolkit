@@ -36,7 +36,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--index', default = 1, type = int, help = 'One-indexed index of worker for this particular job.')
 parser.add_argument('-n', '--workers', default = 1, type = int, help = 'Total jobs to be run *in separate jobs*')
 parser.add_argument('-l', '--limit', type = int, help = 'Limit the number of foundation models analyzed.')
-parser.add_argument('-s', '--seed', default = 0, type = int, help = "Seed used for all random processes. Default is 0.")
+parser.add_argument('-s', '--seed', default = 1232, type = int, help = "Seed used for all random processes. Default is 0.")
 
 args = parser.parse_args()
 cluster = Cluster(index = args.index, worker_count = args.workers, limit = args.limit, seed = args.seed)

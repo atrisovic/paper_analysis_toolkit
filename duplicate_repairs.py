@@ -46,7 +46,7 @@ with open(mapping_path, 'r') as f:
 
 
 samples_path = '/data1/groups/futuretech/atrisovic/osfm/saved_results/classifier/trials/results/premicrosoft_meeting_classified.csv'
-df = cluster.clusterDataframe(pd.read_csv(samples_path, nrows = 1e5))
+df = cluster.clusterDataframe(pd.read_csv(samples_path))
 
 
 df = df[df['modelId'].apply(lambda id: id in duplicate_mapping)]

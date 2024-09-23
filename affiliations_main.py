@@ -4,7 +4,7 @@ from datetime import datetime
 from config import MARKDOWN_FILES_PATH, LLM_MODEL_NAME, LLM_MODEL_PATH, LLM_TOKENIZER_PATH
 import  logging, argparse
 
-from paper_analysis_toolkit.src.language_models.InstitutionsPipeline import InstitutionsPipeline, ListInstitutions
+from src.process.AffiliationsPipelines import ZeroShotAffiliationsPipeline, ListInstitutions
 from src.prompts.affiliation_prompts import PROMPT3
 from src.language_models.ChatInterface import LlamaCPPChatInterface
 
@@ -36,7 +36,7 @@ def main():
     model = Llama(model_path, n_gpu_layers = -1, n_ctx = 4096, verbose = False)
     interface = LlamaCPPChatInterface(model = model, outputClass = ListInstitutions)
     
-    affPipepline = InstitutionsPipeline(interface = interface,
+    affPipepline = ZeroShotAffiliationsPipeline(interface = interface,
                                     prompt = PROMPT3,
                                     debug = args.debug)
         
