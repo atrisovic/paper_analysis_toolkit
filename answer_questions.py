@@ -96,8 +96,7 @@ with open(output_path, 'a') as f:
             csv_writer = DictWriter(f, fieldnames=df.columns)
             csv_writer.writeheader()
 
-skip_primary_keys = {} if existing_results_path is None else {(row['modelKey'], row['paperId'], row['multisentence']) 
-                     for idx, row in pd.read_csv(existing_results_path).iterrows()}
+skip_primary_keys = {} if existing_results_path is None else {(row['modelKey'], row['paperId'], row['multisentence']) for idx, row in pd.read_csv(existing_results_path).iterrows()}
 df = df[df.apply(lambda row: (row['modelKey'], row['paperId'], row['multisentence']) not in skip_primary_keys, axis = 1)]
 
 for idx, row in tqdm(list(df.iterrows())):

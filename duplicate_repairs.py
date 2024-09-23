@@ -50,7 +50,6 @@ df = cluster.clusterDataframe(pd.read_csv(samples_path))
 
 
 df = df[df['modelId'].apply(lambda id: id in duplicate_mapping)]
-df = df[df['classification'].apply(lambda c: c in {'extends', 'uses'})]
 
 
 df.drop_duplicates(subset = ['modelId', 'paperId', 'multisentence'], inplace = True)
