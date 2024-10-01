@@ -3,7 +3,6 @@ from typing import Tuple
 from math import ceil
 import random, json
 from os.path import basename
-from torch import backends, cuda
 
 df = pd.read_csv('./data/sub_sample_dataset2.csv')
 id_to_title = {k:v for k, v in zip(df['citation.paperId'].to_list(), df['citation.title'].to_list())} | {k:v for k, v in zip(df['model.paperId'].to_list(), df['model.title'].to_list())}
@@ -28,8 +27,6 @@ def extract_paper_metadata(path: str):
                 paper_years[json_line['paperId']] = json_line['year']
     return paper_years
 
-def get_device():
-    return 'mps' if backends.mps.is_available() else 'cuda' if cuda.is_available() else 'cpu'
 
 def load_affiliations_results(path: str):
     with open(path, 'r') as f: 

@@ -1,6 +1,6 @@
 from src.document.textual_reference import TextualReference
-from src.functional import implies
 from src.process.FoundationModel import FoundationModel
+from src.functional import implies
 
 from typing import List, Dict, Set
 
@@ -22,9 +22,18 @@ class Reference:
         self.context_size = context_size
         
     def __repr__(self):
-        return f"Title: {self.model.title}, Citation: '{self.citations}', missing_citation: {self.missing_citation}"
+        return f"(Title: {self.model.title}, Citation: '{self.citations}', missing_citation: {self.missing_citation})"
+    
+    def normalizer(self, s):
+        s = re.sub('[\p{Pd}]', ' ', s) 
+        s = re.sub('[\_]', ' ', s) 
+        s = re.sub('\s*:\s*', ':', s) 
+        return s
         
-    def getCitationFromContent(self, content: str) -> str:    
+    def getCitationFromContent(self, content: str) -> str:   
+        content = self.normalizer(content)
+        self.model.title = self.normalizer(self.model.title)
+        
         numerical_refs = re.findall(r"\* ([\(\[]\d{1,3}[\)\]]).*" + self.model.title, content) #  * [38] SOME TEXT HERE title
         string_refs = re.findall(r"\*[\s]+([^\n\)\]]{1,35}[\)\]]+).*" + self.model.title, content) #  * Name, Extra, (Year) SOME TEXT HERE title
         
