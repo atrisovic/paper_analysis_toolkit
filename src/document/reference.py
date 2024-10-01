@@ -22,7 +22,7 @@ class Reference:
         self.context_size = context_size
         
     def __repr__(self):
-        return f"(Title: {self.model.title}, Citation: '{self.citations}', missing_citation: {self.missing_citation})"
+        return f"(Title: {self.model.title}, Reference Exists: {self.reference_exists}, Citation: '{self.citations}', missing_citation: {self.missing_citation})"
     
     def normalizer(self, s):
         s = re.sub('[\p{Pd}]', ' ', s) 

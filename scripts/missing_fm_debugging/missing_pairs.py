@@ -4,8 +4,11 @@ from typing import List
 from json import dumps
 from src.document.paper import Paper
 from src.process.FoundationModel import FoundationModel
+from os.path import join
 
 CITATION_GRAPH_PATH = '/home/gridsan/afogelson/osfm/paper_analysis_toolkit/scripts/missing_fm_debugging/citation_graph_missing_mk_present_0927.jsonl'
+DATA_PATH = '/home/gridsan/afogelson/osfm/data'
+
 
 class MissingFoundationModel(BaseModel):
     paperId: str
@@ -29,11 +32,16 @@ def get_missing_pairs():
 
 
 
-def print_references():
+def percentage_missing():
     pairs = get_missing_pairs()
+    missing = []
     for missing_pair in pairs:
         fm = FoundationModel(key = missing_pair.modelKey, title= missing_pair.title, id= missing_pair.modelId, year=None)
-        sus_paper = Paper(f'../data/markdown/{missing_pair.paperId}.mmd')
+        paper_path = join(DATA_PATH,f'markdown/{missing_pair.paperId}.mmd')
+        sus_paper = Paper(paper_path)
         ref = sus_paper.getReferenceFromTitle(fm)
-        print(sus_paper.references[fm.key])
+        missing.append(0 if ref.reference_exists else 1)
+    print(missing.sum()/len(missing))
+        
+            
         
